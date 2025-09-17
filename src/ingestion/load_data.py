@@ -86,3 +86,22 @@ class LoadDataFromFile:
         except Exception as e:
             logger.error(f"Error reading delta files from {full_path}: {str(e)}")
 
+
+    def read_json(self, file_path: str) -> DataFrame:
+        """ 
+        Read json file from file path
+
+        Args:
+            file_path (str): Path to the json file
+
+        Returns:
+            DataFrame: Spark dataframe with data
+        """
+        try:
+            full_path = f"{self.base_path}/{file_path}"
+            logger.info(f"Reading json file from {full_path}")
+
+            return self.spark.read.json(full_path)
+        except Exception as e:
+            logger.error(f"Error reading json files from {full_path}: {str(e)}")
+            raise
