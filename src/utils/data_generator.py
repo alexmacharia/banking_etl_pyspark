@@ -52,7 +52,7 @@ transaction_schema = StructType([
     StructField("account_id", StringType(), False),
     StructField("transaction_date", TimestampType(), False),
     StructField("transaction_type", StringType(), True),
-    StructField("amount", DecimalType(18, 2), True),
+    StructField("amount", FloatType(), True),
     StructField("currency", StringType(), True),
     StructField("description", StringType(), True),
     StructField("merchant_name", StringType(), True),
@@ -156,14 +156,77 @@ def generate_accounts_data(customers_df, num_accounts = 1500):
 def generate_transaction_data(accounts_df, num_transactions=10000):
     transaction_types = ['deposit', 'withdrawal', 'transfer', 'payment']
     currencies = ["USD", "EUR", "GBP"]
+    merchant_categories = ["grocery", "restaurant", "retail", "travel", "utility", "entertainment"]
+    transaction_statuses = ["completed", "pending", "failed", "reversed"]
+    channels = ["online", "mobile", "branch", "atm"]
+    locations = ["USA", "Canada", "UK", "France", "Germany", "Japan", "Australia", "Brazil", "Mexico", "China"]
     
+    transactions = []
+
+    account_ids = [row.account_id for row in accounts_df.filter("account_status = 'active'").select("account_id").collect()]
+
+    for i in range(num_transactions):
+        transaction_id = str(uuid.uuid4())
+        account_id = random.choice(account_ids)
+
+        days_ago = random.randint(0, 90)
+        hours_ago = random.randint(0, 24)
+        minutes_ago = random.randint(0, 60)
+        transaction_date = datetime.now() - timedelta(days = days_ago, hours = hours_ago, minutes = minutes_ago)
+
+        transaction_type = random.choice(transaction_types)
+
+        amount = random.uniform(10, 5000)
+
+        currency = random.choice(currencies)
+        merchant_category = random.choice(merchant_categories)
+
+        if merchant_category == "grocery":
+            merchant_name = random.choice(["Whole Foods", "Safeway", "Kroger", "Trader Joe's"])
+        elif merchant_category == "restaurant":
+            merchant_name = random.choice(["McDonald's", "Starbucks", "Chipotle", "Olive Garden"])
+        elif merchant_category == "retail":
+            merchant_name = random.choice(["Amazon", "Walmart", "Target", "Best Buy"])
+        elif merchant_category == "travel":
+            merchant_name = random.choice(["Delta Airlines", "Marriott", "Expedia", "Uber"])
+        elif merchant_category == "utility":
+            merchant_name = random.choice(["AT&T", "PG&E", "Comcast", "Verizon"])
+        else:  # entertainment
+            merchant_name = random.choice(["Netflix", "AMC Theaters", "Spotify", "Disney+"])
+        
+        location = random.choice(locations)
+        is_international = location != "USA"
+
+        transactions.append((
+            transaction_id,
+            account_id,
+            transaction_date,
+            transaction_type,
+            amount,
+            currency,
+            f"{transaction_type.capitalize()} at {merchant_name}",
+            merchant_name,
+            merchant_category,
+            random.choice(transaction_statuses),
+            random.choice(channels),
+            location,
+            is_international
+        ))
+
+    return spark.createDataFrame(transactions, transaction_schema)
+
+
+
+
         
 
-customer_df = generate_customer_data(1000)  
-customer_df.write.mode("overwrite").csv("data/raw/customers/", header=True)
-
+customer_df = generate_customer_data(1000)
 account_df = generate_accounts_data(customer_df, 1500)
-account_df.write.mode("overwrite").csv("data/raw/accounts/", header=True)
+transaction_df = generate_transaction_data(account_df, 10000)
+
+customer_df.coalesce(1).write.mode("overwrite").csv("../../data/raw/customers/", header=True)
+account_df.coalesce(1).write.mode("overwrite").csv("../../data/raw/accounts/", header=True)
+transaction_df.coalesce(1).write.mode("overwrite").csv("../../data/raw/transactions/", header=True)
 
 customer_df.show(10)
 
