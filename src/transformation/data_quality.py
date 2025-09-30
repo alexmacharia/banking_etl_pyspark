@@ -49,7 +49,7 @@ class DataQualityChecker:
              return True, null_counts 
         
     
-    def check_duplicates(df:DataFrame, key_columns: List[str]) -> Tuple[bool, int]:
+    def check_duplicates(self, df:DataFrame, key_columns: List[str]) -> Tuple[bool, int]:
         """ 
         Check for duplicate records based on keys
 
@@ -75,5 +75,41 @@ class DataQualityChecker:
         else:
             logger.info("Duplicate check has passed")
             return True, 0
+        
+    
+    def check_data_ranges(df: DataFrame, range_checks: Dict[str, Tuple]) -> Tuple[bool, Dict[str, int]]:
+        """ 
+        Check if values in column fall in expected range
+
+        Args:
+            df (DataFrame): Dataframe to check
+            range_checks (Dict[str, Tuple]): Dictionary mapping columns to range of values
+
+        Returns:
+            Tuple[bool, Dict[str, int]]: (passed/failed, dict of out of range counts by column)
+        """
+        logger.info(f"Checking data ranges for columns: {list(range_checks.keys())}")
+
+        out_of_range_counts = {}
+
+        for col, (min_value, max_value) in range_checks.items():
+            if col in df.columns:
+                out_of_range_count = df.filter(
+                    (F.col(col) < min_value) | (F.col(col) > max_value)
+                ).count()
+
+                out_of_range_counts[col] = out_of_range_count
+            else:
+                logger.warning(f"Column {col} not found")
+                out_of_range_counts[col] = "Column not found"
+
+        has_out_of_range = any(isinstance(count, int) and count > 0 for count in out_of_range_counts.values())
+
+        if has_out_of_range:
+            logger.warning(f"Range check failed. Out of range counts: {out_of_range_counts}")
+            return False, out_of_range_counts
+        else:
+            logger.info("Range check passed")
+            return True, out_of_range_counts
 
         
