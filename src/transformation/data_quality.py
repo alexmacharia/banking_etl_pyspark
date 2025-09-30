@@ -47,5 +47,33 @@ class DataQualityChecker:
         else:
              logger.info("Null check passed")
              return True, null_counts 
+        
+    
+    def check_duplicates(df:DataFrame, key_columns: List[str]) -> Tuple[bool, int]:
+        """ 
+        Check for duplicate records based on keys
+
+        Args:
+            df (DataFrame): Dataframe with data to be checked
+
+            key_columns(List[str]): columns that should compose a unique key
+
+        Returns:
+            Tuple[bool, int]: (passsed/failed, count of duplicate records)
+        """
+        logger.info(f"Checking for duplicates on key columns")
+
+        total_rows = df.count()
+
+        distinct_rows = df.select(key_columns).distinct().count()
+
+        duplicate_count = total_rows - distinct_rows
+
+        if duplicate_count > 0:
+            logger.warning(f"Duplicate check failed. Found {duplicate_count} duplicates")
+            return False, duplicate_count
+        else:
+            logger.info("Duplicate check has passed")
+            return True, 0
 
         
