@@ -111,5 +111,37 @@ class DataQualityChecker:
         else:
             logger.info("Range check passed")
             return True, out_of_range_counts
+        
+
+    def check_referential_integrity(df:DataFrame, ref_df:DataFrame, fk_column: str, pk_column: str) -> Tuple[bool, int]:
+        """ 
+        Check referential integrity between two dataframes
+
+        Args:
+            df (DataFrame): Dataframe with foreign key
+            ref_df (DataFrame): DataFrame with primary key
+            fk_column (str): Foreign key column in df dataframe
+            pk_column (str): Promary key column in ref_df dataframe
+
+        Returns:
+            Tuple[bool, int]: (passed/failed, count of orphaned records)
+        """
+
+        logger.info(f"Checking referential integrity: {fk_column} in {pk_column}")
+
+        fk_values = df.select(fk_column).distinct()
+
+        pk_values = ref_df.select(pk_column).distinct()
+
+        orphaned_records = fk_values.exceptAll(pk_values)
+
+        orphaned_count = orphaned_records.count()
+
+        if orphaned_count > 0:
+            logger.warning(f"Referential integrity check failed. Found {orphaned_count} orphaned records")
+            return False, orphaned_count
+        else:
+            logger.info("Referential integrity check passed")
+            return True, 0
 
         
