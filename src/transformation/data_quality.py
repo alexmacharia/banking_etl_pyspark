@@ -1,0 +1,51 @@
+from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import functions as F
+from typing import Dict, List, Tuple 
+import logging
+
+logger = logging.getLogger(__name__)
+
+class DataQualityChecker:
+    """ Class for checking data quality on the data"""
+
+    def __init__(self, spark:SparkSession):
+        """ 
+        Initialize the DQ class
+
+        Args:
+            spark (SparkSession): Spark session
+        """
+
+    
+    def check_nulls(self, df:DataFrame, required_cols: List[str]) -> Tuple[bool, Dict[str, int]]:
+        """ 
+        Check for null values in the specified fields
+
+        Args:
+            df (DataFrame): Dataframe with data to be checked
+            required_cols (List[str]): List of columns to check for null values
+
+        Returns:
+            Tuple[bool, Dict[str, int]]: (passed/failed, dict of null counts by column)
+        """
+        logger.info(f"checking for null columns in: {required_cols}")
+
+        null_counts = {}
+        for col in required_cols:
+            if col in df.columns:
+                null_count = df.filter(F.col(col).isNull()).count()
+                null_counts[col] = null_count
+            else:
+                logger.warning(f"Column {col} not found in the DataFrame")
+                null_counts[col] = "Column not found"
+
+        has_nulls = any(isinstance(count, int) and count > 0 for count in null_counts.values())
+
+        if has_nulls:
+             logger.warning(f"Null check failed. Null counts: {null_counts}")
+             return False, null_counts
+        else:
+             logger.info("Null check passed")
+             return True, null_counts 
+
+        
