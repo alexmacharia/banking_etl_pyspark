@@ -77,7 +77,7 @@ class DataQualityChecker:
             return True, 0
         
     
-    def check_data_ranges(df: DataFrame, range_checks: Dict[str, Tuple]) -> Tuple[bool, Dict[str, int]]:
+    def check_data_ranges(self, df: DataFrame, range_checks: Dict[str, Tuple]) -> Tuple[bool, Dict[str, int]]:
         """ 
         Check if values in column fall in expected range
 
@@ -113,7 +113,7 @@ class DataQualityChecker:
             return True, out_of_range_counts
         
 
-    def check_referential_integrity(df:DataFrame, ref_df:DataFrame, fk_column: str, pk_column: str) -> Tuple[bool, int]:
+    def check_referential_integrity(self, df:DataFrame, ref_df:DataFrame, fk_column: str, pk_column: str) -> Tuple[bool, int]:
         """ 
         Check referential integrity between two dataframes
 
@@ -143,5 +143,51 @@ class DataQualityChecker:
         else:
             logger.info("Referential integrity check passed")
             return True, 0
+        
+    
+    def run_all_checks(self, df: DataFrame, check_config: Dict) -> Dict:
+        """ 
+        Run all configured data quality checks on Dataframe
+
+        Args:
+            df (DataFrame): DataFrame to run checks on
+            check_config (Dict): Configuration of checks to be run
+
+        Returns:
+            Dict: Results of the quality checks
+        """
+        logger.info(f"Running data quality checks for table: {check_config.get('table_name', 'unknown')}")
+
+        results = {
+            "table_name": check_config.get("table_name", "unknown"),
+            "record_count": df.count(),
+            "checks": {}
+        }
+
+
+        if "required_columns" in check_config:
+            null_check_passed, null_counts = self.check_nulls(df, check_config["required_columns"])  #add self
+            results["checks"]["null_check"] = {
+                "passed": null_check_passed,
+                "details": null_counts
+            }
+
+        if "key_columns" in check_config:
+            dup_check_passed, dup_count = self.check_duplicates(df, check_config["key_columns"])
+            results["checks"]["duplicate_check"] = {
+                "passed": dup_check_passed,
+                "details": {"duplicate_count": dup_count}
+            }
+
+        if "range_checks" in check_config:
+            range_check_passed, range_counts = self.check_data_ranges(df, check_config["range_checks"])
+            results["checks"]["range_check"] = {
+                "passed": range_check_passed,
+                "details": range_counts
+            }
+
+        results["overall_passed"] = all(check["passed"] for check in results["checks"].values())
+
+        return results
 
         

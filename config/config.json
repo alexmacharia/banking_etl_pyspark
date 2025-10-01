@@ -1,0 +1,25 @@
+{
+    "app_name": "Banking ETL Pipeline",
+    "environment": "production",
+    "pipelines_to_run": ["customer", "account", "transaction"],
+    "pipelines": {
+        "transaction": {
+            "source_type": "file",
+            "source_path": "data/raw/transactions/",
+            "target_type": "file",
+            "target_path": "data/processed/transactions/",
+            "write_mode": "append",
+            "partition_cols": ["transaction_year", "transaction_month"],
+            "fail_on_quality_check": false,
+            "data_quality": {
+                "table_name": "fact_transaction",
+                "required_columns": ["transaction_id", "account_id", "transaction_date", "amount"],
+                "key_columns": ["transaction_id"],
+                "range_checks": {
+                    "amount": [500, 5000]
+                }
+            }
+        }
+    }
+
+}
