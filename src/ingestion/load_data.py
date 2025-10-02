@@ -19,7 +19,7 @@ class LoadDataFromFile:
         self.base_path = data_path
 
     
-    def read_scv(self, file_path: str, header: bool = True, infer_schema: bool = True) -> DataFrame:
+    def read_csv(self, file_path: str, header: bool = True, infer_schema: bool = True) -> DataFrame:
         """ 
         Read csv files from file path.
 
@@ -79,7 +79,7 @@ class LoadDataFromFile:
         
         """
         try:
-            full_path = f"{self.base_path}/{file+path}"
+            full_path = f"{self.base_path}/{file_path}"
             logger.info("Reading delta file from {full_path}")
 
             return self.spark.read.format("delta").load(full_path)
