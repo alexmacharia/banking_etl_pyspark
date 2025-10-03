@@ -5,7 +5,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class LoadDataFromFile:
+class LocalConnector:
     """ Class to handle data ingestion from file path"""
     def __init__(self, spark: SparkSession, data_path: str):
         """
