@@ -25,9 +25,51 @@ class BankingETLPipeline:
             config_path (str): Path to the config file
         """
 
-        #Setup logging
+        # Setup logging
         setup_logging()
 
+        # Load config file
+        try:
+            logger.info(f"Loading configuration from {config_path}")
+            with open(config_path, 'r') as f:
+                self.config = json.load(f)
+        except Exception as e:
+            logger.error(f"Error loading config file from {config_path}: {str(e)}")
+
+        # Initialize spark session
+        logger.info("Initializing Spark session")
+        self.spark = create_spark_session(app_name=self.config.get("app_name", "Banking ETL Pipeline"))
+
+        # Set execution date
+        self.execution_date = datetime.now().strftime("%Y-%m-%d")
+
+        # Initialize components
+        self._init_components()
+
+    
+    def _init_components(self):
+        """Initialized the pipeline components based on the configurations"""
+        logger.info("Initializing pipeline components")
+
+
+        # Initialize data connectors
+        local_config = self.config.get("local", {})
+        self.local_connector = LocalConnector(
+            self.spark,
+            local_config.get("base_data_path", "")
+        )
+
+        # Initialize transformers
+        self.transaction_transformer = TransactionTransformer(self.spark)
+
+        # Initialize data quality checker
+        self.data_quality_cheker = DataQualityChecker(self.spark)
+
         
+
+
+    
+
+
 
 

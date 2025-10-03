@@ -2,12 +2,17 @@
     "app_name": "Banking ETL Pipeline",
     "environment": "production",
     "pipelines_to_run": ["customer", "account", "transaction"],
+
+    "local": {
+        "base_data_path": "data/"
+    },
+
     "pipelines": {
         "transaction": {
-            "source_type": "file",
-            "source_path": "data/raw/transactions/",
-            "target_type": "file",
-            "target_path": "data/processed/transactions/",
+            "source_type": "local",
+            "source_path": "raw/transactions/",
+            "target_type": "local",
+            "target_path": "processed/transactions/",
             "write_mode": "append",
             "partition_cols": ["transaction_year", "transaction_month"],
             "fail_on_quality_check": false,
