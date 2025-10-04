@@ -3,6 +3,11 @@
     "environment": "production",
     "pipelines_to_run": ["customer", "account", "transaction"],
 
+    "s3": {
+        "bucket_name": "banking-data-lake-003",
+        "region": "eu-west-1"
+    },
+
     "local": {
         "base_data_path": "data/"
     },
