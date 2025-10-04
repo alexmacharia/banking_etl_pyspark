@@ -99,13 +99,13 @@ class RedshiftLoader:
                     ----Update existing records
                     UPDATE {target_table} AS target
                     SET {update_statements}
-                    FROM {staginf_table} AS source
+                    FROM {staging_table} AS source
                     WHERE {key_conditions};
                     
                 
                     ---Insert new records
                     INSERT INTO {target_table} ({insert_columns})
-                    SELECT {insert_value}
+                    SELECT {insert_values}
                     FROM {staging_table} AS source
                     LEFT JOIN {target_table} AS target
                     ON {key_conditions}
