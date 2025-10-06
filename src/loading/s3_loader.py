@@ -58,25 +58,25 @@ class S3Loader:
             raise
 
 
-        def write_delta(self, df: DataFrame, file_path: str, mode: str = "append", partition_by: List[str] = None) -> None:
-            """ 
-            Write delta files to S3
+    def write_delta(self, df: DataFrame, file_path: str, mode: str = "append", partition_by: List[str] = None) -> None:
+        """ 
+        Write delta files to S3
 
-            Args:
-                df (DataFrame): dataframe to write
-                file_path (str): Path to write delta files
-                mode (str): (append/overwrite/error)
-                partition_by (List[str]): Column(s) to partition the delta table
-            """
-            try:
-                full_path = f"s3a://{self.bucket_name}/{file_path}"
-                logger.info(f"Writing dataframe to delta format in path: {full_path}")
+        Args:
+            df (DataFrame): dataframe to write
+            file_path (str): Path to write delta files
+            mode (str): (append/overwrite/error)
+            partition_by (List[str]): Column(s) to partition the delta table
+        """
+        try:
+            full_path = f"s3a://{self.bucket_name}/{file_path}"
+            logger.info(f"Writing dataframe to delta format in path: {full_path}")
 
-                df.write.format("delta").mode(mode).partitionBy(partition_by).save(full_path)
-            except Exception as e:
-                logger.error(f"Error writing delta table to path: {full_path}: {str(e)}")
-                raise
-            
+            df.write.format("delta").mode(mode).partitionBy(partition_by).save(full_path)
+        except Exception as e:
+            logger.error(f"Error writing delta table to path: {full_path}: {str(e)}")
+            raise
+
 
     
 
