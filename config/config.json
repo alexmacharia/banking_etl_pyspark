@@ -16,6 +16,7 @@
         "transaction": {
             "source_type": "local",
             "source_path": "raw/transactions/",
+            "source_format": "csv",
             "target_type": "local",
             "target_path": "processed/transactions/",
             "write_mode": "append",

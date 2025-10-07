@@ -67,6 +67,15 @@ class BankingETLPipeline:
 
         # Initialize data quality checker
         self.data_quality_cheker = DataQualityChecker(self.spark)
+         
+        # Initialize data loaders
+        redshift_config = self.config.get("redshift", {})
+        self.redshift_loader = RedshiftLoader(
+            self.spark,
+            redshift_config.get("jdbc_url"),
+            redshift_config.get("username"),
+            redshift_config.get("password")
+        )
 
         self.s3_loader = S3Loader(
             self.spark,
@@ -101,7 +110,6 @@ class BankingETLPipeline:
                         transaction_config.get("source_path")
                     )
                 else:
-                    logger.error(f"Unsupported source format {source_format}")
                     raise ValueError(f"Unsupported source format {source_format}")
             elif source_type == "rds":
                 raw_transactions = self.rds_connector.read_table(
@@ -125,10 +133,8 @@ class BankingETLPipeline:
                         transaction_config.get("source_path")
                     )
                 else:
-                    logger.error(f"Unsupported source format {source_format}")
                     raise ValueError(f"Unsupported source format {source_format}")
             else:
-                logger.error(f"Unsupported source type {source_type}")
                 raise ValueError(f"Unsupported source type {source_type}")
             
             # Transform transaction data
@@ -142,6 +148,37 @@ class BankingETLPipeline:
                 final_transactions,
                 transaction_config.get("data_quality", {})
             )
+
+            if not quality_results.get("overall_passed", False):
+                logger.warning("Data quality checks failed for transaction data")
+                if transaction_config.get("fail_on_quality_check", True):
+                    raise Exception("Data quality checks failed for transaction data")
+            
+            target_type = transaction_config.get("target_type")
+
+            if target_type == "redshift":
+                self.redshift_loader.load_with_staging(
+                    final_transactions,
+                    transaction_config.get("target_path"),
+                    key_columns=transaction_config.get("key_columns", ["transaction_id"])
+                )
+            elif target_type == "s3":
+                self.s3_loader.write_delta(
+                    final_transactions,
+                    transaction_config.get("target_path"),
+                    mode=transaction_config.get("write_mode", "append"),
+                    partition_by=transaction_config.get("partition_cols", ["transaction_year", "transaction_month"])
+                )
+            else:
+                logger.error(f"Unsupported target type: {target_type}")
+                raise ValueError(f"Unsupported target type: {target_type}")
+            
+            logger.info("Transaction data pipeline completed successfully")
+            return True
+        except Exception as e:
+            logger.error(f"Error in transaction data pipeline: {str(e)}")
+        
+                
 
 
 

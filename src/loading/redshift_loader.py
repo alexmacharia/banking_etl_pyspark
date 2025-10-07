@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession, DataFrame
 import logging
-from typing import Dict, List, Tuple, Optional
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 

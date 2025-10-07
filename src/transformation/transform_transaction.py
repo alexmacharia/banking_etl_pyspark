@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class TransformTransaction:
+class TransactionTransformer:
     """ Class to handle transactions transformations"""
 
     def __init__(self, spark: SparkSession):
