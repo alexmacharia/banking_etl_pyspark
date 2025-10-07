@@ -177,8 +177,51 @@ class BankingETLPipeline:
             return True
         except Exception as e:
             logger.error(f"Error in transaction data pipeline: {str(e)}")
-        
-                
+    
+
+    def run_customer_pipeline(self):
+        """Run the customer pipeline"""
+        pass
+
+    
+    def run_account_pipeline(self):
+        """Run the account pipeline"""
+        pass
+    
+    
+    def run_pipeline(self):
+        """ Run the ETL pipeline"""
+        logger.info("Starting the banking ETL pipeline")
+
+        try:
+            pipelines_to_run = self.config.get("pipelines_to_run", [])
+
+            if "customer" in pipelines_to_run:
+                self.run_customer_pipeline()
+            
+            if "account" in pipelines_to_run:
+                self.run_account_pipeline()
+            
+            if "transaction" in pipelines_to_run:
+                self.run_transaction_pipeline()
+
+            logger.info("Banking ETL pipeline completed successfully")
+            return True
+        except Exception as e:
+            logger.error(f"Error running the banking ETL pipeline: {str(e)}")
+            raise
+        finally:
+            # Clean up resources
+            logger.info("Cleaning up resources")
+            self.spark.stop()
+
+
+if __name__ == "__main__":
+    config_path = os.environ.get("ETL_CONFIG_PATH", "config/config.json")
+
+    # Run the pipeline
+    pipeline = BankingETLPipeline(config_path)
+    pipeline.run_pipeline()         
 
 
 
