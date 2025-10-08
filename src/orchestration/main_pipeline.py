@@ -13,6 +13,9 @@ from src.loading.redshift_loader import RedshiftLoader
 from src.loading.s3_loader import S3Loader
 from src.utils.logging_utils import setup_logging
 
+# Setup logging
+setup_logging()
+
 logger = logging.getLogger(__name__)
 
 class BankingETLPipeline:
@@ -26,8 +29,9 @@ class BankingETLPipeline:
             config_path (str): Path to the config file
         """
 
-        # Setup logging
-        setup_logging()
+        
+
+        
 
         # Load config file
         try:
@@ -66,7 +70,7 @@ class BankingETLPipeline:
         self.transaction_transformer = TransactionTransformer(self.spark)
 
         # Initialize data quality checker
-        self.data_quality_cheker = DataQualityChecker(self.spark)
+        self.data_quality_checker = DataQualityChecker(self.spark)
          
         # Initialize data loaders
         redshift_config = self.config.get("redshift", {})
@@ -88,7 +92,7 @@ class BankingETLPipeline:
         logger.info("Running transaction data pipeline")
 
         try:
-            transaction_config = self.config.get("pipelines", {}).get("transactions", {})
+            transaction_config = self.config.get("pipelines", {}).get("transaction", {})
             source_type = transaction_config.get("source_type")
             source_format = transaction_config.get("source_format")
 
@@ -117,19 +121,19 @@ class BankingETLPipeline:
                 )
             elif source_type == "local":
                 if source_format == "csv":
-                    raw_transactions = self.s3_connector.read_csv(
+                    raw_transactions = self.local_connector.read_csv(
                         transaction_config.get("source_path")
                     )
                 elif source_format == "parquet":
-                    raw_transactions = self.s3_connector.read_parquet(
+                    raw_transactions = self.local_connector.read_parquet(
                         transaction_config.get("source_path")
                     )
                 elif source_format == "json":
-                    raw_transactions = self.s3_connector.read_json(
+                    raw_transactions = self.local_connector.read_json(
                         transaction_config.get("source_path")
                     )
                 elif source_format == "delta":
-                    raw_transactions = self.s3_connector.read_delta(
+                    raw_transactions = self.local_connector.read_delta(
                         transaction_config.get("source_path")
                     )
                 else:
@@ -148,7 +152,7 @@ class BankingETLPipeline:
                 final_transactions,
                 transaction_config.get("data_quality", {})
             )
-
+            print(quality_results)
             if not quality_results.get("overall_passed", False):
                 logger.warning("Data quality checks failed for transaction data")
                 if transaction_config.get("fail_on_quality_check", True):
@@ -164,6 +168,13 @@ class BankingETLPipeline:
                 )
             elif target_type == "s3":
                 self.s3_loader.write_delta(
+                    final_transactions,
+                    transaction_config.get("target_path"),
+                    mode=transaction_config.get("write_mode", "append"),
+                    partition_by=transaction_config.get("partition_cols", ["transaction_year", "transaction_month"])
+                )
+            elif target_type == "local":
+                self.local_loader.write_delta(
                     final_transactions,
                     transaction_config.get("target_path"),
                     mode=transaction_config.get("write_mode", "append"),

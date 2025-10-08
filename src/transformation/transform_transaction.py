@@ -45,7 +45,7 @@ class TransactionTransformer:
         return df
     
 
-    def enrich_transaction_data( df: DataFrame) -> DataFrame:
+    def enrich_transaction_data(self, df: DataFrame) -> DataFrame:
         """ 
         Enrich transaction data
 
@@ -121,7 +121,7 @@ class TransactionTransformer:
         return df
     
 
-    def detect_anomalies(df: DataFrame) -> DataFrame:
+    def detect_anomalies(self, df: DataFrame) -> DataFrame:
         """ 
         Detect anomalies in transactions based on business rules
 
