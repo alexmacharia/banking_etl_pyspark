@@ -11,6 +11,7 @@ from src.transformation.transform_transaction import TransactionTransformer
 from src.transformation.data_quality import DataQualityChecker
 from src.loading.redshift_loader import RedshiftLoader
 from src.loading.s3_loader import S3Loader
+from src.loading.local_loader import LocalLoader
 from src.utils.logging_utils import setup_logging
 
 # Setup logging
@@ -85,6 +86,11 @@ class BankingETLPipeline:
             self.spark,
             s3_config.get("bucket_name", "banking-data-lake-03")
             )
+        
+        self.local_loader = LocalLoader(
+            self.spark,
+            local_config.get("base_data_path", "")
+        )
         
 
     def run_transaction_pipeline(self):
