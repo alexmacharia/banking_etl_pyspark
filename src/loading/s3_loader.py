@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession, DataFrame
 import logging
-from typing import List, Optional
+from typing import List
 from delta.tables import DeltaTable
 
 logger = logging.getLogger(__name__)
@@ -92,8 +92,7 @@ class S3Loader:
             key_columns (List[str]): Primary key column for merging
         """
         try:
-            # full_path = f"s3a://{bucket_name}/{file_path}"
-            full_path = file_path
+            full_path = f"s3a://{self.bucket_name}/{file_path}"
             logger.info(f"Writing dataframe to delta location: {full_path}")
 
             if key_columns and len(key_columns) > 0:
