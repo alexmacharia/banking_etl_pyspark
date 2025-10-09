@@ -10,7 +10,7 @@ class LocalLoader:
     """Class to handle loading to local filesystem"""
 
 
-    def __init__(self, spark: SparkSession, base_path: str)
+    def __init__(self, spark: SparkSession, base_path: str):
         """
         Initialize the Local Loader class
                  
