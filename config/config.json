@@ -20,7 +20,7 @@
             "target_type": "local",
             "target_path": "processed/transactions/",
             "write_mode": "append",
-            "partition_cols": ["transaction_year", "transaction_month"],
+            "partition_cols": ["year_month"],
             "fail_on_quality_check": false,
             "data_quality": {
                 "table_name": "fact_transaction",
