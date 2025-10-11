@@ -26,7 +26,7 @@ class TransactionTransformer:
             df (DataFrame): Raw transaction data
 
         Returns:
-            df (DataFrame): Cleaned transaction data
+            DataFrame: Cleaned transaction data
         """
         logger.info("Cleaning transaction data")
         
