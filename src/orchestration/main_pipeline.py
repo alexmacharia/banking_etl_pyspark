@@ -7,6 +7,7 @@ from datetime import datetime
 # Import project modules
 from src.utils.spark_session import create_spark_session
 from src.ingestion.local_connector import LocalConnector
+from src.transformation.transform_customer import CustomerTransformer
 from src.transformation.transform_transaction import TransactionTransformer
 from src.transformation.data_quality import DataQualityChecker
 from src.loading.redshift_loader import RedshiftLoader
@@ -69,6 +70,7 @@ class BankingETLPipeline:
 
         # Initialize transformers
         self.transaction_transformer = TransactionTransformer(self.spark)
+        self.customer_transformer = CustomerTransformer(self.spark)
 
         # Initialize data quality checker
         self.data_quality_checker = DataQualityChecker(self.spark)
@@ -158,7 +160,7 @@ class BankingETLPipeline:
                 final_transactions,
                 transaction_config.get("data_quality", {})
             )
-            print(quality_results)
+            
             if not quality_results.get("overall_passed", False):
                 logger.warning("Data quality checks failed for transaction data")
                 if transaction_config.get("fail_on_quality_check", True):
@@ -197,10 +199,106 @@ class BankingETLPipeline:
     
 
     def run_customer_pipeline(self):
-        """Run the customer pipeline"""
-        pass
+        """ Run the customer pipeline"""
+        logger.info("Running the customer pipeline")
 
-    
+        try:
+            customer_config = self.config.get("pipelines", {}).get("customer", {})
+            source_type = customer_config.get("source_type")
+            source_format = customer_config.get("source_format")
+
+            if source_type == "s3":
+                if source_format == "csv":
+                    raw_customers = self.s3_connector.read_csv(
+                        customer_config.get("source_path")
+                    )
+                elif source_format == "parquet":
+                    raw_customers = self.s3_connector.read_parquet(
+                        customer_config.get("source_path")
+                    )
+                elif source_format == "json":
+                    raw_customers = self.s3_connector.read_json(
+                        customer_config.get("source_path")
+                    )
+                elif source_format == "delta":
+                    raw_customers = self.s3_connector.read_delta(
+                        customer_config.get("source_path")
+                    )
+                else:
+                    raise ValueError(f"Unsupported source format {source_format}")
+            elif source_type == "rds":
+                raw_customers = self.rds_connector.read_table(
+                    customer_config.get("source_path")
+                )
+            elif source_type == "local":
+                if source_format == "csv":
+                    raw_customers = self.local_connector.read_csv(
+                        customer_config.get("source_path")
+                    )
+                elif source_format == "parquet":
+                    raw_customers = self.local_connector.read_parquet(
+                        customer_config.get("source_path")
+                    )
+                elif source_format == "json":
+                    raw_customers = self.local_connector.read_json(
+                        customer_config.get("source_path")
+                    )
+                elif source_format == "delta":
+                    raw_customers = self.local_connector.read_delta(
+                        customer_config.get("source_path")
+                    )
+                else:
+                    raise ValueError(f"Unsupported source format {source_format}")
+            else:
+                raise ValueError(f"Unsupported source type {source_type}")
+            
+            # Transform customer data
+            cleaned_customers = self.customer_transformer.clean_customer_data(raw_customers)
+            enriched_customers = self.customer_transformer.enrich_customer_data(cleaned_customers)
+
+            # Run data quality checks
+            quality_results = self.data_quality_checker.run_all_checks(
+                enriched_customers,
+                customer_config.get("data_quality", {})
+            )
+
+            if not quality_results.get("overall_passed", False):
+                logger.warning("Data quality checks failed for customer data")
+                if customer_config.get("fail_on_quality_check", True):
+                    raise Exception("Data quality checks failed for customer data")
+                
+            target_type = customer_config.get("target_type")
+
+            if target_type == "redshift":
+                self.redshift_loader.load_with_staging(
+                    enriched_customers,
+                    customer_config.get("target_path"),
+                    key_columns=customer_config.get("key_columns", ["transaction_id"])
+                )
+            elif target_type == "s3":
+                self.s3_loader.write_delta(
+                    enriched_customers,
+                    customer_config.get("target_path"),
+                    mode=customer_config.get("write_mode", "append"),
+                    partition_by=customer_config.get("partition_cols")
+                )
+            elif target_type == "local":
+                self.local_loader.write_delta(
+                    enriched_customers,
+                    customer_config.get("target_path"),
+                    mode=customer_config.get("write_mode", "append"),
+                    partition_by=customer_config.get("partition_cols")
+                )
+            else:
+                logger.error(f"Unsupported target type: {target_type}")
+                raise ValueError(f"Unsupported target type: {target_type}")
+            
+            logger.info("Customer data pipeline completed successfully")
+            return True
+        except Exception as e:
+            logger.error(f"Error in customer data pipeline: {str(e)}")
+
+                
     def run_account_pipeline(self):
         """Run the account pipeline"""
         pass

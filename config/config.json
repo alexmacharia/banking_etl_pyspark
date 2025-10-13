@@ -30,6 +30,23 @@
                     "amount": [500, 5000]
                 }
             }
+        },
+        "customer": {
+            "source_type": "local",
+            "source_path": "raw/customers/",
+            "source_format": "csv",
+            "target_type": "local",
+            "target_path": "processed/customers/",
+            "write_mode": "upsert",
+            "fail_on_quality_check": false,
+            "data_quality": {
+                "table_name": "dim_customer",
+                "required_columns": ["customer_id", "first_name", "last_name", "date_of_birth"],
+                "key_columns": ["customer_id"],
+                "range_checks": {
+                    "date_of_birth": ["1920-01-01", "2007-01-01"]
+                }
+            }
         }
     }
 
