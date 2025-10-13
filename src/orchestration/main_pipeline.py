@@ -276,18 +276,16 @@ class BankingETLPipeline:
                     key_columns=customer_config.get("key_columns", ["transaction_id"])
                 )
             elif target_type == "s3":
-                self.s3_loader.write_delta(
+                self.s3_loader.write_delta_upsert(
                     enriched_customers,
                     customer_config.get("target_path"),
-                    mode=customer_config.get("write_mode", "append"),
-                    partition_by=customer_config.get("partition_cols")
+                    key_columns=customer_config.get("key_columns")
                 )
             elif target_type == "local":
-                self.local_loader.write_delta(
+                self.local_loader.write_delta_upsert(
                     enriched_customers,
                     customer_config.get("target_path"),
-                    mode=customer_config.get("write_mode", "append"),
-                    partition_by=customer_config.get("partition_cols")
+                    key_columns=customer_config.get("key_columns")
                 )
             else:
                 logger.error(f"Unsupported target type: {target_type}")

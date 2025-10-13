@@ -38,6 +38,7 @@
             "target_type": "local",
             "target_path": "processed/customers/",
             "write_mode": "upsert",
+            "key_columns": ["customer_id"],
             "fail_on_quality_check": false,
             "data_quality": {
                 "table_name": "dim_customer",
