@@ -94,25 +94,29 @@ class LocalLoader:
             full_path = f"{self.base_path}/{file_path}"
             logger.info(f"Upserting data to {full_path}")
 
-            if key_columns and len(key_columns) > 0:
-                if len(key_columns) == 1:
-                    key_conditions = f"target.{key_columns[0]} = source.{key_columns[0]}"
-                else:
-                    key_conditions = " AND ".join(f"target.{col} = source.{col}" for col in key_columns)
-                non_key_columns = [col for col in df.columns if col not in key_columns]
-                update_dict = {f"target.{col}": f"source.{col}" for col in non_key_columns}
-                insert_dict = {f"target.{col}": f"source.{col}" for col in df.columns}
-
-                delta_table = DeltaTable.forPath(self.spark, full_path)
-
-                delta_table.alias("target") \
-                    .merge(df.alias("source"), key_conditions) \
-                    .whenMatchedUpdate(set = update_dict) \
-                    .whenNotMatchedInsert(values = insert_dict) \
-                    .execute()
-                
+            if not DeltaTable.isDeltaTable(self.spark, full_path):
+                df.write.format("delta").save(full_path)
             else:
-                df.write.format("delta").mode("append").save(full_path)
+
+                if key_columns and len(key_columns) > 0:
+                    if len(key_columns) == 1:
+                        key_conditions = f"target.{key_columns[0]} = source.{key_columns[0]}"
+                    else:
+                        key_conditions = " AND ".join(f"target.{col} = source.{col}" for col in key_columns)
+                    non_key_columns = [col for col in df.columns if col not in key_columns]
+                    update_dict = {f"target.{col}": f"source.{col}" for col in non_key_columns}
+                    insert_dict = {f"target.{col}": f"source.{col}" for col in df.columns}
+
+                    delta_table = DeltaTable.forPath(self.spark, full_path)
+
+                    delta_table.alias("target") \
+                        .merge(df.alias("source"), key_conditions) \
+                        .whenMatchedUpdate(set = update_dict) \
+                        .whenNotMatchedInsert(values = insert_dict) \
+                        .execute()
+                
+                else:
+                    df.write.format("delta").mode("append").save(full_path)
 
             logger.info(f"Successfully loaded data to delta table {full_path}")
         except Exception as e:

@@ -9,7 +9,7 @@
     },
 
     "local": {
-        "base_data_path": "data/"
+        "base_data_path": "data"
     },
 
     "pipelines": {
