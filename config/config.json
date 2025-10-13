@@ -1,7 +1,7 @@
 {
     "app_name": "Banking ETL Pipeline",
     "environment": "production",
-    "pipelines_to_run": ["transaction", "customer"],
+    "pipelines_to_run": ["transaction", "customer", "account"],
 
     "s3": {
         "bucket_name": "banking-data-lake-003",
@@ -46,6 +46,25 @@
                 "key_columns": ["customer_id"],
                 "range_checks": {
                     "date_of_birth": ["1920-01-01", "2007-01-01"]
+                }
+            }
+        },
+        "account": {
+            "source_type": "local",
+            "source_path": "raw/accounts/",
+            "source_format": "csv",
+            "target_type": "local",
+            "target_path": "processed/accounts/",
+            "write_mode": "upsert",
+            "key_columns": ["account_id"],
+            "fail_on_quality_check": false,
+            "data_quality": {
+                "table_name": "dim_account",
+                "required_columns": ["account_id", "customer_id", "balance", "account_type", "account_status", "currency", "open_date"],
+                "key_columns": ["account_id"],
+                "range_checks": {
+                    "interest_rate": [0.0, 15.0],
+                    "balance": [0.0, 300000.0]
                 }
             }
         }

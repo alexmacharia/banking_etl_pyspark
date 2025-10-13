@@ -19,7 +19,7 @@ class AccountTransformer:
         self.spark = spark
 
     
-    def clean_account_data(df: DataFrame) -> DataFrame:
+    def clean_account_data(self, df: DataFrame) -> DataFrame:
         """
         Clean accounts data by handling missing values and data types
 
@@ -46,4 +46,32 @@ class AccountTransformer:
         # Fill missing values
         df = df.fillna("N/A", ["account_type", "account_status", "currency", "branch_id"])
 
+        return df
+    
+
+    def enrich_account_data(self, df: DataFrame) -> DataFrame:
+        """
+        Enrich account data
+
+        Args:
+            df (DataFrame): Raw account data
+
+        Returns:
+            DataFrame: Enriched account dataframe
+        """
+        logger.info("Enriching account data")
+    
+        # Check if account is dormant
+        df = df.withColumn("is_dormant", F.when((F.col("account_status") == "active") & (F.datediff(F.current_date(), "last_activity_date") >= 60), True)
+                                      .otherwise(False))
+        
+        # convert balance to usd
+        df = df.withColumn("balance_in_usd", F.when(F.col("currency") == "USD", F.col("balance"))
+                                          .when(F.col("currency") == "EUR", F.col("balance") * F.lit(1.1))
+                                          .when(F.col("currency") == "GBP", F.col("balance") * F.lit(1.3))
+                                          .otherwise(F.col("balance")))
+        
+        # change usd balance to decimal type
+        df = df.withColumn("balance_in_usd", F.col("balance_in_usd").astype("decimal(12,2)"))
+    
         return df

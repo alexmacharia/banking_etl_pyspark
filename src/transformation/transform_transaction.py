@@ -156,6 +156,7 @@ class TransactionTransformer:
         df = df.withColumn("potential_fraud", 
                            F.col("is_large_transaction") |
                            F.col("is_unusual_location") |
+                           F.col("is_high_frequency") |
                            (F.col("days_since_last_transaction") < 0.01))
     
         return df

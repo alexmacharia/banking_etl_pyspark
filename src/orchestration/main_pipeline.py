@@ -8,6 +8,7 @@ from datetime import datetime
 from src.utils.spark_session import create_spark_session
 from src.ingestion.local_connector import LocalConnector
 from src.transformation.transform_customer import CustomerTransformer
+from src.transformation.transform_account import AccountTransformer
 from src.transformation.transform_transaction import TransactionTransformer
 from src.transformation.data_quality import DataQualityChecker
 from src.loading.redshift_loader import RedshiftLoader
@@ -71,6 +72,7 @@ class BankingETLPipeline:
         # Initialize transformers
         self.transaction_transformer = TransactionTransformer(self.spark)
         self.customer_transformer = CustomerTransformer(self.spark)
+        self.account_transformer = AccountTransformer(self.spark)
 
         # Initialize data quality checker
         self.data_quality_checker = DataQualityChecker(self.spark)
@@ -273,7 +275,7 @@ class BankingETLPipeline:
                 self.redshift_loader.load_with_staging(
                     enriched_customers,
                     customer_config.get("target_path"),
-                    key_columns=customer_config.get("key_columns", ["transaction_id"])
+                    key_columns=customer_config.get("key_columns", ["customer_id"])
                 )
             elif target_type == "s3":
                 self.s3_loader.write_delta_upsert(
@@ -299,9 +301,103 @@ class BankingETLPipeline:
                 
     def run_account_pipeline(self):
         """Run the account pipeline"""
-        pass
-    
-    
+        logger.info("Running the account pipeline")
+        
+        try:
+            account_config = self.config.get("pipelines", {}).get("account", {})
+            source_type = account_config.get("source_type")
+            source_format = account_config.get("source_format")
+
+            if source_type == "s3":
+                if source_format == "csv":
+                    raw_accounts = self.s3_connector.read_csv(
+                        account_config.get("source_path")
+                    )
+                elif source_format == "parquet":
+                    raw_accounts = self.s3_connector.read_parquet(
+                        account_config.get("source_path")
+                    )
+                elif source_format == "json":
+                    raw_accounts = self.s3_connector.read_json(
+                        account_config.get("source_path")
+                    )
+                elif source_format == "delta":
+                    raw_accounts = self.s3_connector.read_delta(
+                        account_config.get("source_path")
+                    )
+                else:
+                    raise ValueError(f"Unsupported source format {source_format}")
+            elif source_type == "rds":
+                raw_accounts = self.rds_connector.read_table(
+                    account_config.get("source_path")
+                )
+            elif source_type == "local":
+                if source_format == "csv":
+                    raw_accounts = self.local_connector.read_csv(
+                        account_config.get("source_path")
+                    )
+                elif source_format == "parquet":
+                    raw_accounts = self.local_connector.read_parquet(
+                        account_config.get("source_path")
+                    )
+                elif source_format == "json":
+                    raw_accounts = self.local_connector.read_json(
+                        account_config.get("source_path")
+                    )
+                elif source_format == "delta":
+                    raw_accounts = self.local_connector.read_delta(
+                        account_config.get("source_path")
+                    )
+                else:
+                    raise ValueError(f"Unsupported source format {source_format}")
+            else:
+                raise ValueError(f"Unsupported source type {source_type}")
+            
+            # Transform account data
+            cleaned_accounts = self.account_transformer.clean_account_data(raw_accounts)
+            enriched_accounts = self.account_transformer.enrich_account_data(cleaned_accounts)
+
+            # Run data quality checks
+            quality_results = self.data_quality_checker.run_all_checks(
+                enriched_accounts,
+                account_config.get("data_quality", {})
+            )
+
+            if not quality_results.get("overall_passed", False):
+                logger.warning("Data quality checks failed for account data")
+                if account_config.get("fail_on_quality_check", True):
+                    raise Exception("Data quality checks failed for account data")
+                
+            target_type = account_config.get("target_type")
+
+            if target_type == "redshift":
+                self.redshift_loader.load_with_staging(
+                    enriched_accounts,
+                    account_config.get("target_path"),
+                    key_columns=account_config.get("key_columns", ["account_id"])
+                )
+            elif target_type == "s3":
+                self.s3_loader.write_delta_upsert(
+                    enriched_accounts,
+                    account_config.get("target_path"),
+                    key_columns=account_config.get("key_columns")
+                )
+            elif target_type == "local":
+                self.local_loader.write_delta_upsert(
+                    enriched_accounts,
+                    account_config.get("target_path"),
+                    key_columns=account_config.get("key_columns")
+                )
+            else:
+                logger.error(f"Unsupported target type: {target_type}")
+                raise ValueError(f"Unsupported target type: {target_type}")
+            
+            logger.info("Account data pipeline completed successfully")
+            return True
+        except Exception as e:
+            logger.error(f"Error in account data pipeline: {str(e)}")
+
+
     def run_pipeline(self):
         """ Run the ETL pipeline"""
         logger.info("Starting the banking ETL pipeline")
