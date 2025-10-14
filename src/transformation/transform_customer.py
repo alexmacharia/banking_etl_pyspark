@@ -42,7 +42,7 @@ class CustomerTransformer:
         df = df.withColumn("credit_score", F.col("credit_score").cast("int"))
 
         # Handle missing values 
-        df = df.fillna("Unknown", ["city", "state", "country", "zip_code", "risk_segment"])
+        df = df.fillna("N/A", ["city", "state", "country", "zip_code", "risk_segment"])
 
         return df
     

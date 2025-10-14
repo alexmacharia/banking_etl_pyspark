@@ -34,7 +34,7 @@ class TransactionTransformer:
         df = df.withColumn("transaction_date", F.to_timestamp(F.col("transaction_date")))
         
         # Handle missing values
-        df = df.na.fill("Unknown", ["merchant_name", "merchant_category", "description"])
+        df = df.na.fill("N/A", ["merchant_name", "merchant_category", "description"])
         
         # Filter invalid transactions
         df = df.filter(~((F.col("transaction_type") == "deposit") & (F.col("amount") < 0)))
