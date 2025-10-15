@@ -1,9 +1,7 @@
 from pyspark.sql import SparkSession, DataFrame
 import logging
 from typing import List, Optional
-
-logger = logging.getLogger(__name__)
-
+from src.utils.logging_utils import ETLPipelineLogger
 
 class RedshiftLoader:
     """ Class to handle data loading to AWS Redshift"""
@@ -21,6 +19,7 @@ class RedshiftLoader:
         self.jdbc_url = jdbc_url
         self.username = username
         self.password = password
+        self.logger = ETLPipelineLogger(__name__)
 
     
     def write_to_redshift(self, df: DataFrame, table_name: str, write_mode: str = "append",
@@ -36,7 +35,7 @@ class RedshiftLoader:
             postactions (Optional[str]): SQL to execute after writing
         """
         try:
-            logger.info(f"Writing data to Redshift table: {table_name}")
+            self.logger.info(f"Writing data to Redshift table: {table_name}")
 
             connection_properties = {
                 "url": self.jdbc_url,
@@ -56,9 +55,9 @@ class RedshiftLoader:
                 .options(**connection_properties) \
                 .save()
             
-            logger.info(f"Successfully wrote data to Redshift table: {table_name}")
+            self.logger.info(f"Successfully wrote data to Redshift table: {table_name}")
         except Exception as e:
-            logger.error(f"Error writing to Redshift table {table_name}: {str(e)}")
+            self.logger.error(f"Error writing to Redshift table {table_name}: {str(e)}")
             raise
 
     
@@ -77,7 +76,7 @@ class RedshiftLoader:
             if not staging_table:
                 staging_table = f"stg_{target_table}"
 
-            logger.info(f"Loading data to Redshift table: {target_table} using staging table: {staging_table}")
+            self.logger.info(f"Loading data to Redshift table: {target_table} using staging table: {staging_table}")
 
             create_staging_sql =  f""" 
                 DROP TABLE IF EXISTS {staging_table};
@@ -134,9 +133,9 @@ class RedshiftLoader:
 
                 self.execute_sql(truncate_and_load_sql)
 
-            logger.info(f"Successfully loaded data to Redshift table: {target_table}")
+            self.logger.info(f"Successfully loaded data to Redshift table: {target_table}")
         except Exception as e:
-            logger.error(f"Error loading data to Redshift table {target_table}: {str(e)}")
+            self.logger.error(f"Error loading data to Redshift table {target_table}: {str(e)}")
             raise
 
     
@@ -148,7 +147,7 @@ class RedshiftLoader:
             sql (str): SQL statement to execute
         """
         try:
-            logger.info("Executing SQL in Redshift")
+            self.logger.info("Executing SQL in Redshift")
 
             temp_df = self.spark.createDataFrame([("dummy",)], ["dummy"])
 
@@ -166,7 +165,7 @@ class RedshiftLoader:
                 .options(**connection_properties) \
                 .save()
             
-            logger.info("Successfully executed SQL in Redshift")
+            self.logger.info("Successfully executed SQL in Redshift")
         except Exception as e:
-            logger.error(f"Error executing SQL in Redshift: {str(e)}")
+            self.logger.error(f"Error executing SQL in Redshift: {str(e)}")
             raise

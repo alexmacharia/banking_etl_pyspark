@@ -1,10 +1,7 @@
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
-
-import logging
-
-logger = logging.getLogger(__name__)
+from src.utils.logging_utils import ETLPipelineLogger
 
 class TransactionTransformer:
     """ Class to handle transactions transformations"""
@@ -16,6 +13,7 @@ class TransactionTransformer:
                spark (SparkSession): Spark session
         """
         self.spark = spark
+        self.logger = ETLPipelineLogger(__name__)
 
     
     def clean_transaction_data(self, df: DataFrame) -> DataFrame:
@@ -28,7 +26,7 @@ class TransactionTransformer:
         Returns:
             DataFrame: Cleaned transaction data
         """
-        logger.info("Cleaning transaction data")
+        self.logger.info("Cleaning transaction data")
         
         # Convert date string to timestamp format
         df = df.withColumn("transaction_date", F.to_timestamp(F.col("transaction_date")))
@@ -55,7 +53,7 @@ class TransactionTransformer:
         Returns:
            DataFrame: Enriched dataframe
         """
-        logger.info("Enriching transaction data")
+        self.logger.info("Enriching transaction data")
 
         df = df.withColumn("year_month", 
                            F.concat(F.year(F.col("transaction_date")).cast("string"),  
@@ -93,7 +91,7 @@ class TransactionTransformer:
             DataFrame: Transformed dataframe with added metrics
 
         """
-        logger.info("Calculating trnasaction metrics")
+        self.logger.info("Calculating trnasaction metrics")
 
         window =  Window.partitionBy("account_id").orderBy("transaction_date")
 
@@ -131,7 +129,7 @@ class TransactionTransformer:
         Returns:
             DataFrame: Transaction data with anomalies detected
         """
-        logger.info("Detecting anomalies in transactions")
+        self.logger.info("Detecting anomalies in transactions")
 
         account_stats = df.groupBy("account_id").agg(
             F.stddev("amount_in_usd").alias("amount_stddev"),

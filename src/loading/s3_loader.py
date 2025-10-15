@@ -2,8 +2,7 @@ from pyspark.sql import SparkSession, DataFrame
 import logging
 from typing import List
 from delta.tables import DeltaTable
-
-logger = logging.getLogger(__name__)
+from src.utils.logging_utils import ETLPipelineLogger
 
 class S3Loader:
     """ Class to handle data loading to AWS S3"""
@@ -18,6 +17,7 @@ class S3Loader:
         """
         self.spark = spark
         self.bucket_name = bucket_name
+        self.logger = ETLPipelineLogger(__name__)
 
     def write_csv(self, df: DataFrame, file_path: str, header: bool = True,
                    mode: str = "overwrite") -> None:
@@ -32,11 +32,11 @@ class S3Loader:
         """
         try:
             full_path = f"s3a://{self.bucket_name}/{file_path}"
-            logger.info("Writing Dataframe as CSV to: {full_path}")
+            self.logger.info("Writing Dataframe as CSV to: {full_path}")
 
             df.write.csv(full_path, mode=mode, header=header)
         except Exception as e:
-            logger.error(f"Error writing DataFrame as CSV to {full_path}: {str(e)}")
+            self.logger.error(f"Error writing DataFrame as CSV to {full_path}: {str(e)}")
             raise
     
 
@@ -53,11 +53,11 @@ class S3Loader:
         """
         try:
             full_path = f"s3a://{self.bucket_name}/{file_path}"
-            logger.info(f"Writing dataframe to parquet: {full_path}")
+            self.logger.info(f"Writing dataframe to parquet: {full_path}")
 
             df.write.mode(mode).partitionBy(partition_by).parquet(full_path)
         except Exception as e:
-            logger.error(f"Error writing to parquet: {full_path}: {str(e)}")
+            self.logger.error(f"Error writing to parquet: {full_path}: {str(e)}")
             raise
 
 
@@ -74,11 +74,11 @@ class S3Loader:
         """
         try:
             full_path = f"s3a://{self.bucket_name}/{file_path}"
-            logger.info(f"Writing dataframe to delta format in path: {full_path}")
+            self.logger.info(f"Writing dataframe to delta format in path: {full_path}")
 
             df.write.format("delta").mode(mode).partitionBy(partition_by).save(full_path)
         except Exception as e:
-            logger.error(f"Error writing delta table to path: {full_path}: {str(e)}")
+            self.logger.error(f"Error writing delta table to path: {full_path}: {str(e)}")
             raise
 
     
@@ -93,7 +93,7 @@ class S3Loader:
         """
         try:
             full_path = f"s3a://{self.bucket_name}/{file_path}"
-            logger.info(f"Writing dataframe to delta location: {full_path}")
+            self.logger.info(f"Writing dataframe to delta location: {full_path}")
 
             if key_columns and len(key_columns) > 0:
                 if len(key_columns) == 1:
@@ -112,9 +112,9 @@ class S3Loader:
                     .whenNotMatchedInsert(values = insert_dict) \
                     .execute()
         
-            logger.info(f"Successfully loaded data to delta table {full_path}")    
+            self.logger.info(f"Successfully loaded data to delta table {full_path}")    
         except Exception as e:
-            logger.error(f"Error upserting to delta table path {full_path}: {str(e)}")
+            self.logger.error(f"Error upserting to delta table path {full_path}: {str(e)}")
             raise
 
     

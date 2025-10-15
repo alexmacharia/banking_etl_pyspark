@@ -1,10 +1,6 @@
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
-
-import logging
-
-logger = logging.getLogger(__name__)
-
+from src.utils.logging_utils import ETLPipelineLogger
 
 class AccountTransformer:
     """Class to handle account transformations"""
@@ -17,6 +13,7 @@ class AccountTransformer:
             spark (SparkSession): Spark session
         """
         self.spark = spark
+        self.logger = ETLPipelineLogger(__name__)
 
     
     def clean_account_data(self, df: DataFrame) -> DataFrame:
@@ -29,7 +26,7 @@ class AccountTransformer:
         Returns:
             DataFrame: Cleaned accounts dataframe
         """
-        logger.info("Cleaning account data")
+        self.logger.info("Cleaning account data")
 
         # Convert date strings to dates
         df = df.withColumn("open_date", F.to_date("open_date"))
@@ -59,7 +56,7 @@ class AccountTransformer:
         Returns:
             DataFrame: Enriched account dataframe
         """
-        logger.info("Enriching account data")
+        self.logger.info("Enriching account data")
     
         # Check if account is dormant
         df = df.withColumn("is_dormant", F.when((F.col("account_status") == "active") & (F.datediff(F.current_date(), "last_activity_date") >= 60), True)

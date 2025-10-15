@@ -14,12 +14,7 @@ from src.transformation.data_quality import DataQualityChecker
 from src.loading.redshift_loader import RedshiftLoader
 from src.loading.s3_loader import S3Loader
 from src.loading.local_loader import LocalLoader
-from src.utils.logging_utils import setup_logging
-
-# Setup logging
-setup_logging()
-
-logger = logging.getLogger(__name__)
+from src.utils.logging_utils import ETLPipelineLogger
 
 class BankingETLPipeline:
     """ Main class to orchestrate the banking ETL pipeline"""
@@ -31,21 +26,18 @@ class BankingETLPipeline:
         Args:
             config_path (str): Path to the config file
         """
-
-        
-
-        
+        self.logger = ETLPipelineLogger(__name__)
 
         # Load config file
         try:
-            logger.info(f"Loading configuration from {config_path}")
+            self.logger.info(f"Loading configuration from {config_path}")
             with open(config_path, 'r') as f:
                 self.config = json.load(f)
         except Exception as e:
-            logger.error(f"Error loading config file from {config_path}: {str(e)}")
+            self.logger.error(f"Error loading config file from {config_path}: {str(e)}")
 
         # Initialize spark session
-        logger.info("Initializing Spark session")
+        self.logger.info("Initializing Spark session")
         self.spark = create_spark_session(app_name=self.config.get("app_name", "Banking ETL Pipeline"))
 
         # Set execution date
@@ -57,7 +49,7 @@ class BankingETLPipeline:
     
     def _init_components(self):
         """Initialized the pipeline components based on the configurations"""
-        logger.info("Initializing pipeline components")
+        self.logger.info("Initializing pipeline components")
 
 
         # Initialize data connectors
@@ -99,7 +91,7 @@ class BankingETLPipeline:
 
     def run_transaction_pipeline(self):
         """ Run the transaction data pipeline"""
-        logger.info("Running transaction data pipeline")
+        self.logger.info("Running transaction data pipeline")
 
         try:
             transaction_config = self.config.get("pipelines", {}).get("transaction", {})
@@ -164,7 +156,7 @@ class BankingETLPipeline:
             )
             
             if not quality_results.get("overall_passed", False):
-                logger.warning("Data quality checks failed for transaction data")
+                self.logger.warning("Data quality checks failed for transaction data")
                 if transaction_config.get("fail_on_quality_check", True):
                     raise Exception("Data quality checks failed for transaction data")
             
@@ -191,18 +183,18 @@ class BankingETLPipeline:
                     partition_by=transaction_config.get("partition_cols", ["transaction_year", "transaction_month"])
                 )
             else:
-                logger.error(f"Unsupported target type: {target_type}")
+                self.logger.error(f"Unsupported target type: {target_type}")
                 raise ValueError(f"Unsupported target type: {target_type}")
             
-            logger.info("Transaction data pipeline completed successfully")
+            self.logger.info("Transaction data pipeline completed successfully")
             return True
         except Exception as e:
-            logger.error(f"Error in transaction data pipeline: {str(e)}")
+            self.logger.error(f"Error in transaction data pipeline: {str(e)}")
     
 
     def run_customer_pipeline(self):
         """ Run the customer pipeline"""
-        logger.info("Running the customer pipeline")
+        self.logger.info("Running the customer pipeline")
 
         try:
             customer_config = self.config.get("pipelines", {}).get("customer", {})
@@ -265,7 +257,7 @@ class BankingETLPipeline:
             )
 
             if not quality_results.get("overall_passed", False):
-                logger.warning("Data quality checks failed for customer data")
+                self.logger.warning("Data quality checks failed for customer data")
                 if customer_config.get("fail_on_quality_check", True):
                     raise Exception("Data quality checks failed for customer data")
                 
@@ -290,18 +282,18 @@ class BankingETLPipeline:
                     key_columns=customer_config.get("key_columns")
                 )
             else:
-                logger.error(f"Unsupported target type: {target_type}")
+                self.logger.error(f"Unsupported target type: {target_type}")
                 raise ValueError(f"Unsupported target type: {target_type}")
             
-            logger.info("Customer data pipeline completed successfully")
+            self.logger.info("Customer data pipeline completed successfully")
             return True
         except Exception as e:
-            logger.error(f"Error in customer data pipeline: {str(e)}")
+            self.logger.error(f"Error in customer data pipeline: {str(e)}")
 
                 
     def run_account_pipeline(self):
         """Run the account pipeline"""
-        logger.info("Running the account pipeline")
+        self.logger.info("Running the account pipeline")
         
         try:
             account_config = self.config.get("pipelines", {}).get("account", {})
@@ -364,7 +356,7 @@ class BankingETLPipeline:
             )
 
             if not quality_results.get("overall_passed", False):
-                logger.warning("Data quality checks failed for account data")
+                self.logger.warning("Data quality checks failed for account data")
                 if account_config.get("fail_on_quality_check", True):
                     raise Exception("Data quality checks failed for account data")
                 
@@ -389,18 +381,18 @@ class BankingETLPipeline:
                     key_columns=account_config.get("key_columns")
                 )
             else:
-                logger.error(f"Unsupported target type: {target_type}")
+                self.logger.error(f"Unsupported target type: {target_type}")
                 raise ValueError(f"Unsupported target type: {target_type}")
             
-            logger.info("Account data pipeline completed successfully")
+            self.logger.info("Account data pipeline completed successfully")
             return True
         except Exception as e:
-            logger.error(f"Error in account data pipeline: {str(e)}")
+            self.logger.error(f"Error in account data pipeline: {str(e)}")
 
 
     def run_pipeline(self):
         """ Run the ETL pipeline"""
-        logger.info("Starting the banking ETL pipeline")
+        self.logger.info("Starting the banking ETL pipeline")
 
         try:
             pipelines_to_run = self.config.get("pipelines_to_run", [])
@@ -414,14 +406,14 @@ class BankingETLPipeline:
             if "transaction" in pipelines_to_run:
                 self.run_transaction_pipeline()
 
-            logger.info("Banking ETL pipeline completed successfully")
+            self.logger.info("Banking ETL pipeline completed successfully")
             return True
         except Exception as e:
-            logger.error(f"Error running the banking ETL pipeline: {str(e)}")
+            self.logger.error(f"Error running the banking ETL pipeline: {str(e)}")
             raise
         finally:
             # Clean up resources
-            logger.info("Cleaning up resources")
+            self.logger.info("Cleaning up resources")
             self.spark.stop()
 
 

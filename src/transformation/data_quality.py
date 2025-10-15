@@ -1,9 +1,7 @@
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
 from typing import Dict, List, Tuple 
-import logging
-
-logger = logging.getLogger(__name__)
+from src.utils.logging_utils import ETLPipelineLogger
 
 class DataQualityChecker:
     """ Class for checking data quality on the data"""
@@ -15,6 +13,8 @@ class DataQualityChecker:
         Args:
             spark (SparkSession): Spark session
         """
+        self.spark = spark
+        self.logger = ETLPipelineLogger(__name__)
 
     
     def check_nulls(self, df:DataFrame, required_cols: List[str]) -> Tuple[bool, Dict[str, int]]:
@@ -28,7 +28,7 @@ class DataQualityChecker:
         Returns:
             Tuple[bool, Dict[str, int]]: (passed/failed, dict of null counts by column)
         """
-        logger.info(f"checking for null columns in: {required_cols}")
+        self.logger.info(f"checking for null columns in: {required_cols}")
 
         null_counts = {}
         for col in required_cols:
@@ -36,16 +36,16 @@ class DataQualityChecker:
                 null_count = df.filter(F.col(col).isNull()).count()
                 null_counts[col] = null_count
             else:
-                logger.warning(f"Column {col} not found in the DataFrame")
+                self.logger.warning(f"Column {col} not found in the DataFrame")
                 null_counts[col] = "Column not found"
 
         has_nulls = any(isinstance(count, int) and count > 0 for count in null_counts.values())
 
         if has_nulls:
-             logger.warning(f"Null check failed. Null counts: {null_counts}")
+             self.logger.warning(f"Null check failed. Null counts: {null_counts}")
              return False, null_counts
         else:
-             logger.info("Null check passed")
+             self.logger.info("Null check passed")
              return True, null_counts 
         
     
@@ -61,7 +61,7 @@ class DataQualityChecker:
         Returns:
             Tuple[bool, int]: (passsed/failed, count of duplicate records)
         """
-        logger.info(f"Checking for duplicates on key columns")
+        self.logger.info(f"Checking for duplicates on key columns")
 
         total_rows = df.count()
 
@@ -70,10 +70,10 @@ class DataQualityChecker:
         duplicate_count = total_rows - distinct_rows
 
         if duplicate_count > 0:
-            logger.warning(f"Duplicate check failed. Found {duplicate_count} duplicates")
+            self.logger.warning(f"Duplicate check failed. Found {duplicate_count} duplicates")
             return False, duplicate_count
         else:
-            logger.info("Duplicate check has passed")
+            self.logger.info("Duplicate check has passed")
             return True, 0
         
     
@@ -88,7 +88,7 @@ class DataQualityChecker:
         Returns:
             Tuple[bool, Dict[str, int]]: (passed/failed, dict of out of range counts by column)
         """
-        logger.info(f"Checking data ranges for columns: {list(range_checks.keys())}")
+        self.logger.info(f"Checking data ranges for columns: {list(range_checks.keys())}")
 
         out_of_range_counts = {}
 
@@ -100,16 +100,16 @@ class DataQualityChecker:
 
                 out_of_range_counts[col] = out_of_range_count
             else:
-                logger.warning(f"Column {col} not found")
+                self.logger.warning(f"Column {col} not found")
                 out_of_range_counts[col] = "Column not found"
 
         has_out_of_range = any(isinstance(count, int) and count > 0 for count in out_of_range_counts.values())
 
         if has_out_of_range:
-            logger.warning(f"Range check failed. Out of range counts: {out_of_range_counts}")
+            self.logger.warning(f"Range check failed. Out of range counts: {out_of_range_counts}")
             return False, out_of_range_counts
         else:
-            logger.info("Range check passed")
+            self.logger.info("Range check passed")
             return True, out_of_range_counts
         
 
@@ -127,7 +127,7 @@ class DataQualityChecker:
             Tuple[bool, int]: (passed/failed, count of orphaned records)
         """
 
-        logger.info(f"Checking referential integrity: {fk_column} in {pk_column}")
+        self.logger.info(f"Checking referential integrity: {fk_column} in {pk_column}")
 
         fk_values = df.select(fk_column).distinct()
 
@@ -138,10 +138,10 @@ class DataQualityChecker:
         orphaned_count = orphaned_records.count()
 
         if orphaned_count > 0:
-            logger.warning(f"Referential integrity check failed. Found {orphaned_count} orphaned records")
+            self.logger.warning(f"Referential integrity check failed. Found {orphaned_count} orphaned records")
             return False, orphaned_count
         else:
-            logger.info("Referential integrity check passed")
+            self.logger.info("Referential integrity check passed")
             return True, 0
         
     
@@ -156,7 +156,7 @@ class DataQualityChecker:
         Returns:
             Dict: Results of the quality checks
         """
-        logger.info(f"Running data quality checks for table: {check_config.get('table_name', 'unknown')}")
+        self.logger.info(f"Running data quality checks for table: {check_config.get('table_name', 'unknown')}")
 
         results = {
             "table_name": check_config.get("table_name", "unknown"),

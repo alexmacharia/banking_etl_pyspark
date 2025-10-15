@@ -1,10 +1,6 @@
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
-
-import logging
-
-logger = logging.getLogger(__name__)
-
+from src.utils.logging_utils import ETLPipelineLogger
 
 class CustomerTransformer:
     """ Class to handle customer transformations"""
@@ -18,6 +14,7 @@ class CustomerTransformer:
 
         """
         self.spark = spark
+        self.logger = ETLPipelineLogger(__name__)
 
     
     def clean_customer_data(self, df: DataFrame) -> DataFrame:
@@ -31,7 +28,7 @@ class CustomerTransformer:
             DataFrame: Cleaned customers data
     
         """
-        logger.info("Cleaning customer data")
+        self.logger.info("Cleaning customer data")
 
         # Convert date strings to date format
         df = df.withColumn("date_of_birth", F.to_date("date_of_birth"))
@@ -57,7 +54,7 @@ class CustomerTransformer:
         Returns:
             DataFrame: Enrcihed customer dataframe
         """
-        logger.info("Enriching customer data")
+        self.logger.info("Enriching customer data")
     
         # Get full name
         df = df.withColumn("full_name", F.concat("first_name", F.lit(" "), "last_name"))

@@ -1,8 +1,10 @@
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
 import logging
+from src.utils.logging_utils import ETLPipelineLogger
 
-logger = logging.getLogger(__name__)
+#logger = logging.getLogger(__name__)
+#logger = setup_logging(__name__)
 
 
 class LocalConnector:
@@ -17,6 +19,7 @@ class LocalConnector:
         """
         self.spark = spark
         self.base_path = data_path
+        self.logger = ETLPipelineLogger(__name__)
 
     
     def read_csv(self, file_path: str, header: bool = True, infer_schema: bool = True) -> DataFrame:
@@ -33,7 +36,7 @@ class LocalConnector:
         """
         try:
             full_path = f"{self.base_path}/{file_path}"
-            logger.info(f"Reading csv file from {full_path}")
+            self.logger.info(f"Reading csv file from {full_path}")
 
             return (
                 self.spark.read
@@ -42,7 +45,7 @@ class LocalConnector:
                     .csv(full_path)
             )
         except Exception as e:
-            logger.error(f"Error reading CSV file from {full_path}: {str(e)}")
+            self.logger.error(f"Error reading CSV file from {full_path}: {str(e)}")
             raise
     
 
@@ -59,11 +62,11 @@ class LocalConnector:
         """
         try:
             full_path = f"{self.base_path}/{file_path}"
-            logger.info(f"Reading parquet file from {full_path}")
+            self.logger.info(f"Reading parquet file from {full_path}")
 
             return self.spark.read.parquet(full_path)
         except Exception as e:
-            logger.error(f"Error reading parquet file from {full_path}: {str(e)}")
+            self.logger.error(f"Error reading parquet file from {full_path}: {str(e)}")
             raise
 
 
@@ -80,11 +83,11 @@ class LocalConnector:
         """
         try:
             full_path = f"{self.base_path}/{file_path}"
-            logger.info("Reading delta file from {full_path}")
+            self.logger.info("Reading delta file from {full_path}")
 
             return self.spark.read.format("delta").load(full_path)
         except Exception as e:
-            logger.error(f"Error reading delta files from {full_path}: {str(e)}")
+            self.logger.error(f"Error reading delta files from {full_path}: {str(e)}")
 
 
     def read_json(self, file_path: str) -> DataFrame:
@@ -99,9 +102,9 @@ class LocalConnector:
         """
         try:
             full_path = f"{self.base_path}/{file_path}"
-            logger.info(f"Reading json file from {full_path}")
+            self.logger.info(f"Reading json file from {full_path}")
 
             return self.spark.read.json(full_path)
         except Exception as e:
-            logger.error(f"Error reading json files from {full_path}: {str(e)}")
+            self.logger.error(f"Error reading json files from {full_path}: {str(e)}")
             raise

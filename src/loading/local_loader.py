@@ -2,9 +2,7 @@ from pyspark.sql import SparkSession, DataFrame
 from delta.tables import DeltaTable
 import logging
 from typing import List
-
-logger = logging.getLogger(__name__)
-
+from src.utils.logging_utils import ETLPipelineLogger
 
 class LocalLoader:
     """Class to handle loading to local filesystem"""
@@ -20,6 +18,7 @@ class LocalLoader:
         """
         self.spark = spark
         self.base_path = base_path
+        self.logger = ETLPipelineLogger(__name__)
     
     def write_csv(self, df: DataFrame, file_path: str, header: bool = True,
                   mode: str = "overwrite") -> None:
@@ -34,11 +33,11 @@ class LocalLoader:
         """
         try:
             full_path = f"{self.base_path}/{file_path}"
-            logger.info(f"Writing csv file to {full_path}")
+            self.logger.info(f"Writing csv file to {full_path}")
 
             df.write.csv(full_path, mode=mode, header=header)
         except Exception as e:
-            logger.error(f"Error writing csv to {full_path}: {str(e)}")
+            self.logger.error(f"Error writing csv to {full_path}: {str(e)}")
             raise
 
     def write_parquet(self, df: DataFrame, file_path: str, mode: str = "append",
@@ -54,11 +53,11 @@ class LocalLoader:
         """
         try:
             full_path = f"{self.base_path}/{file_path}"
-            logger.info(f"Writing parquet file to {full_path}")
+            self.logger.info(f"Writing parquet file to {full_path}")
 
             df.write.mode(mode).partitionBy(partition_by).parquet(full_path)
         except Exception as e:
-            logger.error(f"Error writing to parquet {full_path}: {str(e)}")
+            self.logger.error(f"Error writing to parquet {full_path}: {str(e)}")
             raise
     
     def write_delta(self, df: DataFrame, file_path: str, mode: str = "append",
@@ -74,11 +73,11 @@ class LocalLoader:
         """
         try:
             full_path = f"{self.base_path}/{file_path}"
-            logger.info(f"Writing delta file to {full_path}")
+            self.logger.info(f"Writing delta file to {full_path}")
 
             df.write.format("delta").mode(mode).partitionBy(partition_by).save(full_path)
         except Exception as e:
-            logger.error(f"Error writing delta file {full_path}: {str(e)}")
+            self.logger.error(f"Error writing delta file {full_path}: {str(e)}")
             raise
 
     def write_delta_upsert(self, df: DataFrame, file_path: str, key_columns: List[str] = None) -> None:
@@ -92,7 +91,7 @@ class LocalLoader:
         """
         try:
             full_path = f"{self.base_path}/{file_path}"
-            logger.info(f"Upserting data to {full_path}")
+            self.logger.info(f"Upserting data to {full_path}")
 
             if not DeltaTable.isDeltaTable(self.spark, full_path):
                 df.write.format("delta").save(full_path)
@@ -118,7 +117,7 @@ class LocalLoader:
                 else:
                     df.write.format("delta").mode("append").save(full_path)
 
-            logger.info(f"Successfully loaded data to delta table {full_path}")
+            self.logger.info(f"Successfully loaded data to delta table {full_path}")
         except Exception as e:
-            logger.error(f"Error upserting dataframe to delta table {full_path}: {str(e)}")
+            self.logger.error(f"Error upserting dataframe to delta table {full_path}: {str(e)}")
             raise
