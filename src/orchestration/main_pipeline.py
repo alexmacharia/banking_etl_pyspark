@@ -270,15 +270,19 @@ class BankingETLPipeline:
                     key_columns=customer_config.get("key_columns", ["customer_id"])
                 )
             elif target_type == "s3":
-                self.s3_loader.write_delta_upsert(
+                self.s3_loader.write_delta(
                     enriched_customers,
                     customer_config.get("target_path"),
+                    mode=customer_config.get("write_mode"),
+                    partition_by=customer_config.get("partition_cols"),
                     key_columns=customer_config.get("key_columns")
                 )
             elif target_type == "local":
-                self.local_loader.write_delta_upsert(
+                self.local_loader.write_delta(
                     enriched_customers,
                     customer_config.get("target_path"),
+                    mode=customer_config.get("write_mode"),
+                    partition_by=customer_config.get("partition_cols"),
                     key_columns=customer_config.get("key_columns")
                 )
             else:
@@ -369,15 +373,19 @@ class BankingETLPipeline:
                     key_columns=account_config.get("key_columns", ["account_id"])
                 )
             elif target_type == "s3":
-                self.s3_loader.write_delta_upsert(
+                self.s3_loader.write_delta(
                     enriched_accounts,
                     account_config.get("target_path"),
+                    mode=account_config.get("write_mode"),
+                    partition_by=account_config.get("partition_cols"),
                     key_columns=account_config.get("key_columns")
                 )
             elif target_type == "local":
-                self.local_loader.write_delta_upsert(
+                self.local_loader.write_delta(
                     enriched_accounts,
                     account_config.get("target_path"),
+                    mode=account_config.get("write_mode"),
+                    partition_by=account_config.get("partition_cols"),
                     key_columns=account_config.get("key_columns")
                 )
             else:
