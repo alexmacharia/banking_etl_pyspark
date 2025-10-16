@@ -78,10 +78,11 @@ class S3Loader:
 
             if mode == 'upsert':
                 if not DeltaTable.isDeltaTable(self.spark, full_path):
-                    if not partition_by:
-                        df.write.format("delta").mode("overwrite").save(full_path)
-                    else:
+                    if partition_by in df.columns:
                         df.write.format("delta").partitionBy(partition_by).mode("overwrite").save(full_path)
+                    else:
+                        df.write.format("delta").mode("overwrite").save(full_path)
+                        
                 else:
 
                     if key_columns and len(key_columns) > 0:
@@ -102,15 +103,17 @@ class S3Loader:
                             .execute()
                 
                     else:
-                        if not partition_by:
-                            df.write.format("delta").mode("append").save(full_path)
-                        else:
+                        if partition_by in df.columns:
                             df.write.format("delta").partitionBy(partition_by).mode("append").save(full_path)
+                        else:
+                            df.write.format("delta").mode("append").save(full_path)
+                            
             else:
-                if not partition_by:
-                    df.write.format("delta").mode(mode).save(full_path)
-                else:
+                if partition_by in df.columns:
                     df.write.format("delta").mode(mode).partitionBy(partition_by).save(full_path)
+                else:
+                    df.write.format("delta").mode(mode).save(full_path)
+                    
         except Exception as e:
             self.logger.error(f"Error writing delta table to path: {full_path}: {str(e)}")
             raise
