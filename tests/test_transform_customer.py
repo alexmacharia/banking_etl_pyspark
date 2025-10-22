@@ -1,12 +1,3 @@
-
-
-import sys
-
-project_path = 'C:\\Users\\alexm\\Banking_ETL_Pyspark'
-
-sys.path.append(project_path)
-
-
 import random
 from datetime import datetime
 import pytest
@@ -68,6 +59,13 @@ def sample_df(spark: SparkSession) -> DataFrame:
 
 
 def test_clean_customer_data(spark: SparkSession, sample_df: DataFrame) -> None:
+    """
+    Test method clean_customer_data of CustomerTransformer
+
+    Args:
+        spark (SparkSession): Spark session
+        sample_df (DataFrame): Sample data for testing
+    """
     actual_df = customer_transformer.clean_customer_data(sample_df)
 
     expected_df = sample_df.withColumn("date_of_birth", F.to_date("date_of_birth")) \
@@ -79,6 +77,13 @@ def test_clean_customer_data(spark: SparkSession, sample_df: DataFrame) -> None:
 
 
 def test_enrich_customer_data(spark: SparkSession, sample_df:DataFrame) -> None:
+    """
+    Test method enrich_customer_data of CustomerTransformer
+
+    Args:
+        spark (SparkSession): Spark session
+        sample_df (DataFrame): Sample data
+    """
     actual_df = customer_transformer.enrich_customer_data(sample_df)
 
     expected_df = sample_df.withColumn("full_name", F.concat("first_name", F.lit(" "), "last_name")) \
