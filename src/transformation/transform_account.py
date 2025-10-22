@@ -59,7 +59,8 @@ class AccountTransformer:
         self.logger.info("Enriching account data")
     
         # Check if account is dormant
-        df = df.withColumn("is_dormant", F.when((F.col("account_status") == "active") & (F.datediff(F.current_date(), "last_activity_date") >= 60), True)
+        df = df.withColumn("is_dormant", F.when((F.col("account_status") == "active") & 
+                                                (F.datediff(F.current_date(), "last_activity_date") >= 60), True)
                                       .otherwise(False))
         
         # convert balance to usd

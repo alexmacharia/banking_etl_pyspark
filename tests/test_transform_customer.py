@@ -1,8 +1,5 @@
-import random
-from datetime import datetime
 import pytest
 from pyspark.sql import SparkSession, Row, DataFrame
-from pyspark.sql.types import StructType, StructField, StringType, DateType, FloatType
 from pyspark.sql import functions as F
 from src.transformation.transform_customer import CustomerTransformer
 from tests.configure_test import create_spark_session as spark
@@ -12,7 +9,7 @@ customer_transformer = CustomerTransformer(spark)
 
 @pytest.fixture
 def sample_df(spark: SparkSession) -> DataFrame:
-    """Generate sample data for testing the transformation logic"""
+    """Generate sample data for testing the customer transformation logic"""
    
     sample_data = [Row(customer_id='CUST000000', first_name='Mathew', last_name='Nabers',
                         date_of_birth='1973-09-29', email='mathew.nabers@example.com',
@@ -76,7 +73,7 @@ def test_clean_customer_data(spark: SparkSession, sample_df: DataFrame) -> None:
     assert actual_df.collect() == expected_df.collect()
 
 
-def test_enrich_customer_data(spark: SparkSession, sample_df:DataFrame) -> None:
+def test_enrich_customer_data(spark: SparkSession, sample_df: DataFrame) -> None:
     """
     Test method enrich_customer_data of CustomerTransformer
 
