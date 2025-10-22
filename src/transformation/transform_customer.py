@@ -70,6 +70,6 @@ class CustomerTransformer:
                                          .when(F.col("age").between(36, 50), "36 to 50")
                                          .when(F.col("age").between(51, 65), "51 to 65")
                                          .when(F.col("age") >= 66, "Over 66")
-                                         .otherwise("underage") )
+                                         .otherwise("Underage") )
 
         return df
