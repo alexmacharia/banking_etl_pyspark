@@ -108,9 +108,16 @@ def test_enrich_transaction_data(spark: SparkSession, sample_df: DataFrame) -> N
 
 def test_calculate_transaction_metrics(spark: SparkSession, sample_df: DataFrame) -> None:
     """
-    
+    Test method calculate_transaction_metrics of transactionTransformer
+
+    Args:
+        spark (SparkSession): Spark session
+        sample_df (DataFrame): Sample data for testing
     
     """
+    actual_df = transaction_transformer.calculate_transaction_metrics(sample_df)
+
+    expected_df = sample_df.withColumn()
     
 
 
