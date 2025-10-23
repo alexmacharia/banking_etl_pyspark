@@ -75,3 +75,42 @@ def test_clean_transaction_data(spark: SparkSession, sample_df: DataFrame) -> No
     
     assert actual_df.collect() == expected_df.collect()
 
+
+def test_enrich_transaction_data(spark: SparkSession, sample_df: DataFrame) -> None:
+    """
+    Test method enrich_transaction_data of TransactionTransformer
+
+    Args:
+        spark (SparkSession): Spark session
+        sample_df (DataFrame): sample data for testing
+    
+    """
+    actual_df = transaction_transformer.enrich_transaction_data(sample_df)
+
+    expected_df = sample_df.withColumn("year_month", F.date_format("transaction_date", "yyyyMM")) \
+                           .withColumn("transaction_dow", F.dayofweek(F.col("transaction_date"))) \
+                           .withColumn("is_weekend", F.when(F.col("transaction_dow").isin(1,7), True)
+                                       .otherwise(False)) \
+                           .withColumn("amount_in_usd", 
+                                       F.when(F.col("currency") == "USD", F.col("amount"))
+                                        .when(F.col("currency") == "EUR", F.col("amount") * 1.1)
+                                        .when(F.col("currency") == "GBP", F.col("amount") * 1.3)
+                                        .otherwise(F.col("amount"))) \
+                            .withColumn("transaction_category", 
+                                       F.when(F.col("merchant_category").isin("grocery", "supermarket", "retail"), "Retail")
+                                        .when(F.col("merchant_category").isin("restaurant", "fast food", "entertainment"), "Entertainment")
+                                        .when(F.col("merchant_category").isin("gas", "fuel", "travel"), "Transportation")
+                                        .when(F.col("merchant_category").isin("utility", "electricity", "water"), "Utilities")
+                                        .otherwise("Other"))
+    
+    assert actual_df.collect() == expected_df.collect()
+
+
+def test_calculate_transaction_metrics(spark: SparkSession, sample_df: DataFrame) -> None:
+    """
+    
+    
+    """
+    
+
+
