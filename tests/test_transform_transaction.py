@@ -147,7 +147,49 @@ def test_calculate_transaction_metrics(spark: SparkSession, sample_df: DataFrame
     assert actual_df.collect() == expected_df.collect()
 
 
+def test_detect_anomalies(spark: SparkSession, sample_df: DataFrame) -> None:
+    """ 
+    Test method detect_anomalies of TransactionTransformer
 
+    Args:
+        spark (SparkSession): Spark session
+        sample_df (DataFrame): Sample data to test
+    """
+    sample_data = transaction_transformer.calculate_transaction_metrics(
+        transaction_transformer.enrich_transaction_data(
+            transaction_transformer.clean_transaction_data(sample_df)
+        )
+    )
+
+    actual_df = transaction_transformer.detect_anomalies(sample_data)
+
+    account_stats = sample_data.groupBy("account_id").agg(
+        F.stddev("amount_in_usd").alias("amount_stddev"),
+        F.avg("amount_in_usd").alias("amount_avg"),
+        F.max("amount_in_usd").alias("amount_max")
+    )
+
+    expected_df = sample_data.join(account_stats, on="account_id", how="left")
+
+    expected_df = expected_df.withColumn("is_large_transaction", 
+                                         (F.col("amount_in_usd") > (F.col("amount_avg") + 3 * F.col("amount_stddev"))) &
+                                         (F.col("amount_in_usd") > 1000)
+                                         )
+    
+    expected_df = expected_df.withColumn("is_unusual_location",
+                                         F.col("is_international").cast("boolean") &
+                                         ~F.col("location").isin("Canada", "Mexico", "United Kingdom", "France", "Germany"))
+    
+    expected_df = expected_df.withColumn("is_high_frequency",
+                                         F.col("transaction_count_30d") > 100)
+    
+    expected_df = expected_df.withColumn("potential_fraud", 
+                                         F.col("is_large_transaction") |
+                                         F.col("is_unusual_location") |
+                                         F.col("is_high_frequency") |
+                                         (F.col("days_since_last_transaction") < 0.01))
+    
+    assert actual_df.collect() == expected_df.collect()
 
 
     
