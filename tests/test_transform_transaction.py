@@ -1,6 +1,7 @@
 import pytest
 from pyspark.sql import SparkSession, Row, DataFrame
 from pyspark.sql import functions as F
+from pyspark.sql import Window
 from src.transformation.transform_transaction import TransactionTransformer
 from tests.configure_test import create_spark_session as spark
 
@@ -115,9 +116,40 @@ def test_calculate_transaction_metrics(spark: SparkSession, sample_df: DataFrame
         sample_df (DataFrame): Sample data for testing
     
     """
-    actual_df = transaction_transformer.calculate_transaction_metrics(sample_df)
+    sample_data = transaction_transformer.enrich_transaction_data(
+        transaction_transformer.clean_transaction_data(sample_df)
+    )
 
-    expected_df = sample_df.withColumn()
+    actual_df = transaction_transformer.calculate_transaction_metrics(sample_data)
+
+    window = Window.partitionBy("account_id").orderBy("transaction_date")
+
+    expected_df = sample_data.withColumn("amount_signed", 
+                                       F.when(F.col("transaction_type").isin("deposit", "transfer"), F.col("amount_in_usd"))
+                                       .otherwise(-F.col("amount_in_usd")))
+    
+    expected_df = expected_df.withColumn("running_balance", F.sum("amount_signed").over(window)) \
+                             .withColumn("prev_transaction_date", F.lag("transaction_date").over(window))
+    
+    expected_df = expected_df.withColumn("days_since_last_transaction", 
+                                         F.when(F.col("prev_transaction_date").isNull(), 0)
+                                         .otherwise(F.datediff(F.col("transaction_date"), F.col("prev_transaction_date"))))
+    
+    window_30d = Window.partitionBy("account_id") \
+                       .orderBy(F.unix_timestamp(F.col("transaction_date"))) \
+                       .rangeBetween(-2592000, 0)
+    
+    expected_df = expected_df.withColumn("transaction_count_30d", F.count("transaction_id").over(window_30d)) \
+                             .withColumn("total_spend_30d", 
+                                         F.sum(F.when(F.col("transaction_type").isin("withdrawal", "payment"), F.col("amount_in_usd"))
+                                               .otherwise(0)).over(window_30d))
+    
+    assert actual_df.collect() == expected_df.collect()
+
+
+
+
+
     
 
 
