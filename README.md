@@ -1,4 +1,4 @@
-# Data Engineering Project with Pyspark and AWS for Banking
+# Data Engineering Project with Pyspark and AWS for Banking Domain
 
 ## Overview
 
@@ -18,3 +18,11 @@ This project demonstrates a data engineering pipeline built using PySpark for di
 * **Configurable pipeline** with JSON configuration files
 
 ## Tech Stack
+
+|  Component       |    Technology                  |
+|----------------- |:------------------------------:|
+|  Language        |    Python 3.9+                 |
+|  Processing      |    Pyspark                     |
+|  Cloud Storage   |    AWS S3                      |
+|  Configuration   |    JSON                        |
+|  Optional        |    AWS Glue, EMR, Databricks   |
