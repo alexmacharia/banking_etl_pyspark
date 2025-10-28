@@ -6,3 +6,15 @@ This project demonstrates a data engineering pipeline built using PySpark for di
 
 ## Architecture
 
+![Project Architecture](Banking_ETL_Architecture.png)
+
+## Features
+
+* **Data ingestion** from multiple sources (CSV, JSON, Parquet)
+* **Data transformation** and cleaning using Pyspark
+* **Data quality** checks and validations using Pyspark
+* **Partitioning** and storage in optimized delta format and Redshift
+* **Integration with AWS S3** for scalable storage
+* **Configurable pipeline** with JSON configuration files
+
+## Tech Stack
