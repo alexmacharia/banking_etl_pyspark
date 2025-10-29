@@ -124,7 +124,6 @@ These include
 * Referential integrity checks
 
 ## Future enhancements
-* Integr
 * Metadata management via **AWS Glue Catalog**
 * Automated data validation with **Great Expectations**
 * Integration with **Snowflake**
@@ -132,7 +131,6 @@ These include
 ## Author
 **Alex Macharia**
 *Data Engineer*
-[Email](alex.machariam@gmail.com)
 [LinkedIn](https://www.linkedin.com/in/alex-macharia-972a9610/)
 
 
