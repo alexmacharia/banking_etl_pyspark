@@ -132,5 +132,3 @@ These include
 **Alex Macharia**
 *Data Engineer*
 [LinkedIn](https://www.linkedin.com/in/alex-macharia-972a9610/)
-
-
