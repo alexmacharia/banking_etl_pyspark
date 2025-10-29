@@ -66,3 +66,44 @@ banking_etl_pyspark/
 ├── README.md                           # Project documentation
 └── pytest.ini                          # Pytest configuration
 ```
+
+## Example Configuration (config.json)
+```
+json
+
+{
+    "app_name": "Banking ETL Pipeline",
+    "environment": "production",
+    "pipelines_to_run": ["transaction", "customer", "account"],
+
+    "s3": {
+        "bucket_name": "banking-data-lake-003",
+        "region": "eu-west-1"
+    },
+
+    "local": {
+        "base_data_path": "data"
+    },
+
+    "pipelines": {
+        "transaction": {
+            "source_type": "s3",
+            "source_path": "raw/transactions/",
+            "source_format": "csv",
+            "target_type": "s3",
+            "target_path": "processed/transactions/",
+            "write_mode": "append",
+            "partition_cols": ["year_month"],
+            "fail_on_quality_check": false,
+            "data_quality": {
+                "table_name": "fact_transaction",
+                "required_columns": ["transaction_id", "account_id", "transaction_date", "amount"],
+                "key_columns": ["transaction_id"],
+                "range_checks": {
+                    "amount": [500, 5000]
+                }
+            }
+        }
+    }
+}
+```
