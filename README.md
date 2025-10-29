@@ -124,6 +124,7 @@ These include
 * Referential integrity checks
 
 ## Future enhancements
+* Pipeline orchestration with **Databricks Jobs** or **Airflow** 
 * Metadata management via **AWS Glue Catalog**
 * Automated data validation with **Great Expectations**
 * Integration with **Snowflake**
