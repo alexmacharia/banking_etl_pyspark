@@ -107,3 +107,32 @@ json
     }
 }
 ```
+
+## Testing
+To run unit tests for the Pyspark transformations
+```
+bash
+
+pytest
+```
+
+## Data quality checks
+These include
+* Null/missing value checks
+* Duplicate checks
+* Data range checks
+* Referential integrity checks
+
+## Future enhancements
+* Integr
+* Metadata management via **AWS Glue Catalog**
+* Automated data validation with **Great Expectations**
+* Integration with **Snowflake**
+
+## Author
+**Alex Macharia**
+*Data Engineer*
+[Email](alex.machariam@gmail.com)
+[LinkedIn](https://www.linkedin.com/in/alex-macharia-972a9610/)
+
+
