@@ -33,36 +33,36 @@ This project demonstrates a data engineering pipeline built using PySpark for di
 banking_etl_pyspark/
 │
 ├── config/
-│   └── config.json                # Configuration for data paths and parameters
+│   └── config.json                     # Configuration parameters
 ├── src/
-│   ├── ingestion/                 # Logic for reading raw data
-│   │   ├── local_connector.py
-|   │   ├── s3_connector.py       # Data cleaning and transformation
-│   │   └── rds_connector.py
-│   ├── transformation/                    # Writes processed data back to S3
-│   │   ├── transform_account.py
-│   │   ├── transform_customer.py
-│   │   ├── transform_transaction.py
-│   │   └── data_quality.py
-│   ├── loading/                    # Writes processed data back to S3 
-│   │   ├── local_loader.py
-│   │   ├── redshift_loader.py
-│   │   └── s3_loader.py     
-│   ├── utils/                   # Helper functions (logging, I/O)
-│   │   ├── spark_session.py
-│   │   ├── logging_utils.py
-│   │   └── data_generator.py
-├── notebooks/
-│   ├── accounts.ipynb          # Jupyter notebooks for exploration
-│   └── customers.ipynb
-├── tests/
-│   ├── test_transform_account.py
-│   ├── test_transform_customer.py
-│   └── test_transform_transactions.py    # Unit tests for PySpark logic
-├── docs/
-│   ├── architecture.png
-│   └── erd.png
-├── requirements.txt               # Python dependencies
-├── README.md                      # Project documentation
-└── main.py                        # Entry point for the pipeline
+│   ├── ingestion/                      # Data ingestion modules
+│   │   ├── local_connector.py          # Local filesystem connector
+|   │   ├── s3_connector.py             # AWS S3 connector
+│   │   └── rds_connector.py            # AWS RDS connector
+│   ├── transformation/                 # Data transformation modules
+│   │   ├── transform_account.py        # Account data transformations
+│   │   ├── transform_customer.py       # Customer data transformations
+│   │   ├── transform_transaction.py    # Transactions data transformations
+│   │   └── data_quality.py             # Data quality checks
+│   ├── loading/                        # Data loading modules
+│   │   ├── local_loader.py             # Local filesystem loader
+│   │   ├── redshift_loader.py          # AWS Redshift loader
+│   │   └── s3_loader.py                # AWS S3 loader
+│   ├── utils/                          # Helper functions (logging, spark session)
+│   │   ├── spark_session.py            # Spark session
+│   │   ├── logging_utils.py            # Logging utilities
+│   │   └── data_generator.py           # Data generator utility
+├── notebooks/                          # Data exploration notebooks
+│   ├── accounts.ipynb                  # Accounts data exploration
+│   └── customers.ipynb                 # Customer data exploration
+├── tests/                              # Unit and integration tests
+│   ├── test_transform_account.py       # Test account transformation module
+│   ├── test_transform_customer.py      # Test customer transformation module
+│   └── test_transform_transactions.py  # Test transaction transformation module
+├── docs/                               # Documentation
+│   ├── architecture.png                # Architecture diagram
+│   └── erd.png                         # Entity relationship diagram
+├── requirements.txt                    # Python dependencies
+├── README.md                           # Project documentation
+└── pytest.ini                          # Pytest configuration
 ```
