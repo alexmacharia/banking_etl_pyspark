@@ -125,7 +125,7 @@ These include
 
 ## Future enhancements
 * Pipeline orchestration with **Databricks Jobs** or **Airflow** 
-* Metadata management via **AWS Glue Catalog**
+* Metadata management via **AWS Glue Catalog** or **Unity Catalog**
 * Automated data validation with **Great Expectations**
 * Integration with **Snowflake**
 
