@@ -16,6 +16,7 @@ This project demonstrates a data engineering pipeline built using PySpark for di
 * **Partitioning** and storage in optimized delta format and Redshift
 * **Integration with AWS S3** for scalable storage
 * **Configurable pipeline** with JSON configuration files
+* **Centralised logging** with a configurable logging module 
 
 ## Tech Stack
 
@@ -56,6 +57,7 @@ banking_etl_pyspark/
 │   ├── accounts.ipynb                  # Accounts data exploration
 │   └── customers.ipynb                 # Customer data exploration
 ├── tests/                              # Unit and integration tests
+│   ├── configure_test.py               # Test spark session
 │   ├── test_transform_account.py       # Test account transformation module
 │   ├── test_transform_customer.py      # Test customer transformation module
 │   └── test_transform_transactions.py  # Test transaction transformation module
@@ -131,5 +133,5 @@ These include
 
 ## Author
 **Alex Macharia**
-*Data Engineer*
+*Data Engineer* 
 [LinkedIn](https://www.linkedin.com/in/alex-macharia-972a9610/)
