@@ -11,7 +11,7 @@ class S3Connector:
 
         Args:
             spark (SparkSession): Spark session
-            data_path (str): Path to the data files        
+            bucket_name (str): S3 bucket name        
         """
         self.spark = spark
         self.bucket_name = bucket_name
@@ -41,7 +41,7 @@ class S3Connector:
                     .csv(full_path)
             )
         except Exception as e:
-            self.logger.error(f"Error reading CSV file from {full_path}" {str(e)})
+            self.logger.error(f"Error reading CSV file from {full_path} {str(e)}")
             raise
 
     
@@ -82,6 +82,7 @@ class S3Connector:
             return self.spark.read.format("delta").load(full_path)
         except Exception as e:
             self.logger.error(f"Error reading delta files from {full_path}: {str(e)}")
+            raise
 
     
    
@@ -99,16 +100,7 @@ class S3Connector:
             full_path = f"s3a://{self.bucket_name}/{file_path}"
             self.logger.info(f"Reading json files from {full_path}")
 
-            self.spark.read.json(full_path)
+            return self.spark.read.json(full_path)
         except Exception as e:
             self.logger.error(f"Error reading json files from S3 path {full_path}: {str(e)}")
             raise
-
-        
-
-    
-
-    
-    
-
-    
