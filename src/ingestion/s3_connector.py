@@ -51,6 +51,9 @@ class S3Connector:
 
         Args:
             file_path (str): Path to parquet file
+
+        Returns:
+            DataFrame: Spark DataFrame with data
         """
         try:
             full_path = f"s3a://{self.bucket_name}/{file_path}"
@@ -60,6 +63,31 @@ class S3Connector:
         except Exception as e:
             self.logger.error(f"Error reading parquet file from {full_path}: {str(e)}")
             raise
+
+    
+    def read_delta(self, file_path: str) -> DataFrame:
+        """
+        Read data from delta file in S3
+
+        Args:
+            file_path (str): Path to the delta files
+
+        Returns:
+            DataFrame: Spark DataFrame with data loaded
+        """
+        try:
+            full_path = f"s3a://{self.bucket_name}/{file_path}"
+            self.logger.info(f"Reading json file from {full_path}")
+
+            return self.spark.read.format("delta").load(full_path)
+        except Exception as e:
+            self.logger.error(f"Error reading delta files from {full_path}: {str(e)}")
+
+    
+   
+        
+
+    
 
     
     
