@@ -8,7 +8,7 @@ def create_spark_session(app_name = "Banking ETL Pipeline"):
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
         .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
         .config("spark.databricks.delta.retentionDurationCheck.enabled", "false") \
-        .config("spark.sql.warehouse.dir", "s3://your-data-lake-bucket/warehouse") \
+        .config("spark.sql.warehouse.dir", "s3://banking-etl-data-001/warehouse") \
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem") \
         .config("spark.hadoop.fs.s3a.aws.credentials.provider", 
                    "com.amazonaws.auth.DefaultAWSCredentialsProviderChain") \

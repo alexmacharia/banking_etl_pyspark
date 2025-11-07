@@ -14,10 +14,10 @@
 
     "pipelines": {
         "transaction": {
-            "source_type": "local",
+            "source_type": "s3",
             "source_path": "raw/transactions/",
             "source_format": "csv",
-            "target_type": "local",
+            "target_type": "s3",
             "target_path": "processed/transactions/",
             "write_mode": "append",
             "partition_cols": ["year_month"],
@@ -32,10 +32,10 @@
             }
         },
         "customer": {
-            "source_type": "local",
+            "source_type": "s3",
             "source_path": "raw/customers/",
             "source_format": "csv",
-            "target_type": "local",
+            "target_type": "s3",
             "target_path": "processed/customers/",
             "write_mode": "upsert",
             "key_columns": ["customer_id"],
@@ -50,10 +50,10 @@
             }
         },
         "account": {
-            "source_type": "local",
+            "source_type": "s3",
             "source_path": "raw/accounts/",
             "source_format": "csv",
-            "target_type": "local",
+            "target_type": "s3",
             "target_path": "processed/accounts/",
             "write_mode": "upsert",
             "key_columns": ["account_id"],

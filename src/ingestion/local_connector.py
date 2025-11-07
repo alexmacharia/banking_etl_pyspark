@@ -1,11 +1,6 @@
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
-import logging
 from src.utils.logging_utils import ETLPipelineLogger
-
-#logger = logging.getLogger(__name__)
-#logger = setup_logging(__name__)
-
 
 class LocalConnector:
     """ Class to handle data ingestion from file path"""
