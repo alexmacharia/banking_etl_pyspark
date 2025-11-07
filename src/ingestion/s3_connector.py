@@ -77,7 +77,7 @@ class S3Connector:
         """
         try:
             full_path = f"s3a://{self.bucket_name}/{file_path}"
-            self.logger.info(f"Reading json file from {full_path}")
+            self.logger.info(f"Reading delta table from {full_path}")
 
             return self.spark.read.format("delta").load(full_path)
         except Exception as e:
@@ -85,6 +85,25 @@ class S3Connector:
 
     
    
+    def read_json(self, file_path: str):
+        """
+        Read data from json files on S3
+
+        Args:
+            file_path (str): Path to json files on S3
+
+        Returns:
+            DataFrame: Spark DataFrame with data loaded
+        """
+        try:
+            full_path = f"s3a://{self.bucket_name}/{file_path}"
+            self.logger.info(f"Reading json files from {full_path}")
+
+            self.spark.read.json(full_path)
+        except Exception as e:
+            self.logger.error(f"Error reading json files from S3 path {full_path}: {str(e)}")
+            raise
+
         
 
     
