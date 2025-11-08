@@ -1,8 +1,23 @@
+import os
 from pyspark.sql import SparkSession
 from delta import configure_spark_with_delta_pip
 
 
 def create_spark_session(app_name = "Banking ETL Pipeline"):
+    """
+    Create and configure spark session for the ETL pipeline
+
+    Args:
+        app_name (str): Name of the spark application
+
+    Returns:
+        SparkSession: Configured spark session
+    """
+    
+    if "DATABRICKS_RUNTIME_VERSION" in os.environ:
+        spark = SparkSession.builder.appName(app_name).getOrCreate()
+        return spark
+    
     builder = SparkSession.builder.appName(app_name) \
         .config("spark.jars.packages", "io.delta:delta-core_2.12:2.2.0, io.delta:delta-storage_2.12:2.2.0") \
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
