@@ -7,6 +7,7 @@ from datetime import datetime
 # Import project modules
 from src.utils.spark_session import create_spark_session
 from src.ingestion.local_connector import LocalConnector
+from src.ingestion.s3_connector import S3Connector
 from src.transformation.transform_customer import CustomerTransformer
 from src.transformation.transform_account import AccountTransformer
 from src.transformation.transform_transaction import TransactionTransformer
@@ -54,6 +55,10 @@ class BankingETLPipeline:
 
         # Initialize data connectors
         s3_config = self.config.get("s3", {})
+        self.s3_connector = S3Connector(
+            self.spark, 
+            s3_config.get("bucket_name", "banking-data-lake-03")
+        )
 
         local_config = self.config.get("local", {})
         self.local_connector = LocalConnector(
